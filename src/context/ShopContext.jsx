@@ -268,7 +268,7 @@ export function ShopProvider({ children }) {
   }
 
   return (
-    <ShopContext.Provider value={{ 
+    <ShopContext.Provider value={{
       sales, addSale, updateSale, deleteSale, getStats,
       invoices, addInvoice, deleteInvoice
     }}>
