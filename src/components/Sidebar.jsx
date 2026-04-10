@@ -7,7 +7,7 @@ const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Tableau de Bord' },
   { to: '/ventes', icon: ShoppingCart, label: 'Suivi des Ventes' },
   { to: '/factures', icon: FileText, label: 'Factures' },
-  { to: '/depot', icon: Smartphone, label: 'Interface Client' },
+  { to: '/depot', icon: Smartphone, label: 'Dépôt Client' },
 ]
 
 export default function Sidebar() {
