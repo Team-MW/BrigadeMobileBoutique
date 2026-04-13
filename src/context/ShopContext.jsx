@@ -1,105 +1,144 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
-
-// Empty data for testing
-const initialSales = []
+import { supabase } from '../lib/supabase'
 
 const ShopContext = createContext()
 
 export function ShopProvider({ children }) {
-  const [sales, setSales] = useState(() => {
-    // We use a versioned key to force a reset if needed, or just allow manual clear
-    const saved = localStorage.getItem('bm_sales_test')
-    return saved ? JSON.parse(saved) : initialSales
-  })
-  const [nextId, setNextId] = useState(() => {
-    const saved = localStorage.getItem('bm_next_id_test')
-    return saved ? parseInt(saved) : 1
-  })
-  const [invoices, setInvoices] = useState(() => {
-    const saved = localStorage.getItem('bm_invoices_test')
-    return saved ? JSON.parse(saved) : []
-  })
-  const [nextInvoiceId, setNextInvoiceId] = useState(() => {
-    const saved = localStorage.getItem('bm_next_inv_id_test')
-    return saved ? parseInt(saved) : 1
-  })
+  const [sales, setSales] = useState([])
+  const [invoices, setInvoices] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  // Persistence
-  useEffect(() => {
-    localStorage.setItem('bm_sales_test', JSON.stringify(sales))
-    localStorage.setItem('bm_next_id_test', nextId.toString())
-  }, [sales, nextId])
+  // Fetch data from Supabase
+  const fetchData = async () => {
+    setLoading(true)
+    try {
+      const { data: salesData, error: salesError } = await supabase
+        .from('sales')
+        .select('*')
+        .order('date', { ascending: false })
+      
+      if (salesError) throw salesError
+      setSales(salesData || [])
 
-  useEffect(() => {
-    localStorage.setItem('bm_invoices_test', JSON.stringify(invoices))
-    localStorage.setItem('bm_next_inv_id_test', nextInvoiceId.toString())
-  }, [invoices, nextInvoiceId])
-
-  // Cross-tab synchronization
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === 'bm_sales_test' && e.newValue) {
-        setSales(JSON.parse(e.newValue))
-      }
-      if (e.key === 'bm_invoices_test' && e.newValue) {
-        setInvoices(JSON.parse(e.newValue))
-      }
-      if (e.key === 'bm_next_id_test' && e.newValue) {
-        setNextId(parseInt(e.newValue))
-      }
-      if (e.key === 'bm_next_inv_id_test' && e.newValue) {
-        setNextInvoiceId(parseInt(e.newValue))
-      }
+      const { data: invoicesData, error: invoicesError } = await supabase
+        .from('invoices')
+        .select('*')
+        .order('createdAt', { ascending: false })
+      
+      if (invoicesError) throw invoicesError
+      setInvoices(invoicesData || [])
+    } catch (error) {
+      console.error('Error fetching data:', error.message)
+    } finally {
+      setLoading(false)
     }
+  }
 
-    window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
+  useEffect(() => {
+    fetchData()
+
+    // Real-time subscriptions
+    const salesSubscription = supabase
+      .channel('sales-channel')
+      .on('postgres_changes', { event: '*', table: 'sales' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setSales(prev => [payload.new, ...prev])
+        } else if (payload.eventType === 'UPDATE') {
+          setSales(prev => prev.map(s => s.id === payload.new.id ? payload.new : s))
+        } else if (payload.eventType === 'DELETE') {
+          setSales(prev => prev.filter(s => s.id !== payload.old.id))
+        }
+      })
+      .subscribe()
+
+    const invoicesSubscription = supabase
+      .channel('invoices-channel')
+      .on('postgres_changes', { event: '*', table: 'invoices' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setInvoices(prev => [payload.new, ...prev])
+        } else if (payload.eventType === 'DELETE') {
+          setInvoices(prev => prev.filter(inv => inv.id !== payload.old.id))
+        }
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(salesSubscription)
+      supabase.removeChannel(invoicesSubscription)
+    }
   }, [])
 
-
-  const addSale = (sale) => {
-    const newSale = {
-      ...sale,
-      id: nextId,
-      profit: (parseFloat(sale.price) || 0) - (parseFloat(sale.cost) || 0),
+  const addSale = async (sale) => {
+    const profit = (parseFloat(sale.price) || 0) - (parseFloat(sale.cost) || 0)
+    const { data, error } = await supabase
+      .from('sales')
+      .insert([{ ...sale, profit }])
+      .select()
+    
+    if (error) {
+      console.error('Error adding sale:', error.message)
+      return null
     }
-    setSales(prev => [newSale, ...prev])
-    setNextId(prev => prev + 1)
-    return newSale
+    return data[0]
   }
 
-  const updateSale = (id, updates) => {
-    setSales(prev => prev.map(s => {
-      if (s.id === id) {
-        const updated = { ...s, ...updates }
-        updated.profit = (parseFloat(updated.price) || 0) - (parseFloat(updated.cost) || 0)
-        return updated
-      }
-      return s
-    }))
+  const updateSale = async (id, updates) => {
+    // If updating price or cost, recalculate profit
+    let finalUpdates = { ...updates }
+    if (updates.price !== undefined || updates.cost !== undefined) {
+      const { data: currentSale } = await supabase.from('sales').select('*').eq('id', id).single()
+      const newPrice = updates.price !== undefined ? updates.price : currentSale.price
+      const newCost = updates.cost !== undefined ? updates.cost : currentSale.cost
+      finalUpdates.profit = (parseFloat(newPrice) || 0) - (parseFloat(newCost) || 0)
+    }
+
+    const { error } = await supabase
+      .from('sales')
+      .update(finalUpdates)
+      .eq('id', id)
+    
+    if (error) console.error('Error updating sale:', error.message)
   }
 
-  const deleteSale = (id) => {
-    setSales(prev => prev.filter(s => s.id !== id))
+  const deleteSale = async (id) => {
+    const { error } = await supabase
+      .from('sales')
+      .delete()
+      .eq('id', id)
+    
+    if (error) console.error('Error deleting sale:', error.message)
   }
 
-  const addInvoice = (invoiceData) => {
+  const addInvoice = async (invoiceData) => {
+    const nextId = invoices.length + 1
     const newInvoice = {
       ...invoiceData,
-      id: `FAC-${new Date().getFullYear()}-${String(nextInvoiceId).padStart(4, '0')}`,
-      internalId: nextInvoiceId,
+      id: `FAC-${new Date().getFullYear()}-${String(nextId).padStart(4, '0')}`,
       createdAt: new Date().toISOString(),
     }
-    setInvoices(prev => [newInvoice, ...prev])
-    setNextInvoiceId(prev => prev + 1)
-    return newInvoice
+
+    const { data, error } = await supabase
+      .from('invoices')
+      .insert([newInvoice])
+      .select()
+    
+    if (error) {
+      console.error('Error adding invoice:', error.message)
+      return null
+    }
+    return data[0]
   }
 
-  const deleteInvoice = (id) => {
-    setInvoices(prev => prev.filter(inv => inv.id !== id))
+  const deleteInvoice = async (id) => {
+    const { error } = await supabase
+      .from('invoices')
+      .delete()
+      .eq('id', id)
+    
+    if (error) console.error('Error deleting invoice:', error.message)
   }
 
-  // Stats calculation
+  // Stats calculation (similar to before, but using the state)
   const getStats = (period = 'all') => {
     const now = new Date()
     let filteredSales = sales
@@ -123,7 +162,6 @@ export function ShopProvider({ children }) {
     const repairCount = filteredSales.filter(s => s.type === 'Réparation').length
     const saleCount = filteredSales.filter(s => s.type === 'Vente').length
 
-    // Revenue by service type
     const byService = {}
     filteredSales.forEach(s => {
       if (!byService[s.service]) byService[s.service] = { revenue: 0, count: 0 }
@@ -131,7 +169,6 @@ export function ShopProvider({ children }) {
       byService[s.service].count++
     })
 
-    // Revenue by day (last 7 days)
     const dailyRevenue = []
     for (let i = 6; i >= 0; i--) {
       const d = new Date()
@@ -147,7 +184,6 @@ export function ShopProvider({ children }) {
       dailyRevenue.push({ date: dayLabel, revenue: dayRevenue, profit: dayProfit })
     }
 
-    // Revenue by payment method
     const byPayment = {}
     filteredSales.forEach(s => {
       if (!byPayment[s.paymentMethod]) byPayment[s.paymentMethod] = 0
@@ -175,7 +211,7 @@ export function ShopProvider({ children }) {
   return (
     <ShopContext.Provider value={{
       sales, addSale, updateSale, deleteSale, getStats,
-      invoices, addInvoice, deleteInvoice
+      invoices, addInvoice, deleteInvoice, loading
     }}>
       {children}
     </ShopContext.Provider>

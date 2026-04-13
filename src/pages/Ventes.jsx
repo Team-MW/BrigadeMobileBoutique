@@ -58,7 +58,7 @@ const emptyForm = {
 }
 
 export default function Ventes() {
-  const { sales, addSale, updateSale, deleteSale, addInvoice } = useShop()
+  const { sales, addSale, updateSale, deleteSale, addInvoice, loading } = useShop()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
@@ -214,7 +214,13 @@ export default function Ventes() {
     <div className="flex-1 flex flex-col min-h-screen overflow-y-auto">
       <Header title="Suivi des Ventes" subtitle={`${sales.length} transactions enregistrées`} />
 
-      <main className="flex-1 p-6 space-y-5 animate-fade-in">
+      {loading ? (
+        <div className="flex-1 flex flex-col items-center justify-center space-y-4 animate-pulse">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-muted-foreground font-medium">Chargement des données Supabase...</p>
+        </div>
+      ) : (
+        <main className="flex-1 p-6 space-y-5 animate-fade-in">
         
         {/* Summary Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -431,6 +437,7 @@ export default function Ventes() {
           </div>
         )}
       </main>
+    )}
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

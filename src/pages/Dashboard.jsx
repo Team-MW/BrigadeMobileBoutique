@@ -64,7 +64,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 export default function Dashboard() {
-  const { getStats, sales, updateSale } = useShop()
+  const { getStats, sales, updateSale, loading } = useShop()
   const [period, setPeriod] = useState('month')
   const stats = getStats(period)
 
@@ -74,7 +74,13 @@ export default function Dashboard() {
     <div className="flex-1 flex flex-col min-h-screen overflow-y-auto">
       <Header title="Tableau de Bord" subtitle="Vue d'ensemble de votre boutique" />
       
-      <main className="flex-1 p-6 space-y-6 animate-fade-in">
+      {loading ? (
+        <div className="flex-1 flex flex-col items-center justify-center space-y-4 animate-pulse">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-muted-foreground font-medium">Récupération des données cloud...</p>
+        </div>
+      ) : (
+        <main className="flex-1 p-6 space-y-6 animate-fade-in">
         
         {/* Period Selector */}
         <div className="flex items-center gap-2 flex-wrap">
@@ -328,6 +334,7 @@ export default function Dashboard() {
         </Card>
 
       </main>
+      )}
     </div>
   )
 }
