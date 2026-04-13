@@ -33,6 +33,7 @@ export default function ClientForm() {
     clientPhone: '',
     phone: '',
     service: '',
+    secondaryService: '',
     paymentPreference: 'Espèces',
     price: '0',
     notes: '',
@@ -61,8 +62,11 @@ export default function ClientForm() {
     setLoading(true)
     await new Promise(r => setTimeout(r, 600))
 
+    const finalService = form.service === 'Autre / Diagnostic' ? form.secondaryService : form.service
+    
     addSale({
       ...form,
+      service: finalService || 'Diagnostic à faire',
       clientPhone: form.clientPhone,
       date: new Date().toISOString().split('T')[0],
       type: 'Réparation',
@@ -190,6 +194,18 @@ export default function ClientForm() {
                       </button>
                     ))}
                   </div>
+                  {form.service === 'Autre / Diagnostic' && (
+                    <div className="mt-4 animate-fade-in">
+                      <Label htmlFor="secondaryService" className="text-sm font-bold text-gray-700">Détaillez le problème *</Label>
+                      <textarea
+                        id="secondaryService"
+                        placeholder="Décrivez précisément la panne..."
+                        value={form.secondaryService}
+                        onChange={e => setForm({...form, secondaryService: e.target.value})}
+                        className="w-full mt-2 p-4 rounded-2xl bg-gray-50 border-gray-100 text-gray-900 focus:ring-blue-500 min-h-[100px] resize-none"
+                      />
+                    </div>
+                  )}
                   {errors.service && <p className="text-xs text-red-500 font-bold text-center mt-2">{errors.service}</p>}
                 </div>
               </CardContent>
