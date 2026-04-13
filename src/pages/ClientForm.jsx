@@ -64,7 +64,7 @@ export default function ClientForm() {
 
     const finalService = form.service === 'Autre / Diagnostic' ? form.secondaryService : form.service
     
-    addSale({
+    await addSale({
       ...form,
       service: finalService || 'Diagnostic à faire',
       clientPhone: form.clientPhone,
