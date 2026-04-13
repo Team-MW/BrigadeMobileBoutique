@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard'
 import Ventes from './pages/Ventes'
 import Factures from './pages/Factures'
 import ClientForm from './pages/ClientForm'
+import Debug from './pages/Debug'
 import './index.css'
 
 function Layout({ children }) {
@@ -31,6 +32,7 @@ function App() {
             <Route path="/ventes" element={<Ventes />} />
             <Route path="/factures" element={<Factures />} />
             <Route path="/depot" element={<ClientForm />} />
+            <Route path="/debug" element={<Debug />} />
           </Routes>
         </Layout>
       </BrowserRouter>
