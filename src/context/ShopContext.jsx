@@ -70,9 +70,26 @@ export function ShopProvider({ children }) {
 
   const addSale = async (sale) => {
     const profit = (parseFloat(sale.price) || 0) - (parseFloat(sale.cost) || 0)
+    
+    // Explicitly select fields to match the database schema
+    const saleData = {
+      client: sale.client,
+      clientPhone: sale.clientPhone,
+      phone: sale.phone,
+      service: sale.service,
+      type: sale.type || 'Réparation',
+      price: parseFloat(sale.price) || 0,
+      cost: parseFloat(sale.cost) || 0,
+      profit: profit,
+      status: sale.status || 'En attente',
+      paymentMethod: sale.paymentMethod || sale.paymentPreference || 'Espèces',
+      notes: sale.notes || '',
+      date: sale.date || new Date().toISOString().split('T')[0]
+    }
+
     const { data, error } = await supabase
       .from('sales')
-      .insert([{ ...sale, profit }])
+      .insert([saleData])
       .select()
     
     if (error) {
@@ -111,9 +128,15 @@ export function ShopProvider({ children }) {
 
   const addInvoice = async (invoiceData) => {
     const nextId = invoices.length + 1
+    const invoiceSlug = `FAC-${new Date().getFullYear()}-${String(nextId).padStart(4, '0')}`
+    
     const newInvoice = {
-      ...invoiceData,
-      id: `FAC-${new Date().getFullYear()}-${String(nextId).padStart(4, '0')}`,
+      id: invoiceSlug,
+      clientName: invoiceData.clientName,
+      clientPhone: invoiceData.clientPhone || '',
+      total: parseFloat(invoiceData.total) || 0,
+      items: invoiceData.items || [],
+      notes: invoiceData.notes || '',
       createdAt: new Date().toISOString(),
     }
 
