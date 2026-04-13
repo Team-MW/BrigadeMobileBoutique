@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Smartphone, CheckCircle, ArrowRight, User, Phone, CreditCard } from 'lucide-react'
+import { Smartphone, CheckCircle, ArrowRight, User, Phone, CreditCard, Euro } from 'lucide-react'
 
 const PANNES = [
   'Écran cassé',
@@ -34,6 +34,7 @@ export default function ClientForm() {
     phone: '',
     service: '',
     paymentPreference: 'Espèces',
+    price: '0',
     notes: '',
   })
 
@@ -62,15 +63,14 @@ export default function ClientForm() {
 
     addSale({
       ...form,
+      clientPhone: form.clientPhone,
       date: new Date().toISOString().split('T')[0],
       type: 'Réparation',
-      price: 0,
+      price: parseFloat(form.price) || 0,
       cost: 0,
       status: 'En attente',
       paymentMethod: form.paymentPreference,
-      // Store customer phone in notes or extended model if I want, 
-      // but for now I'll append it to notes for the admin to see easily.
-      notes: `Tél Client: ${form.clientPhone}\n${form.notes}`
+      notes: form.notes
     })
 
     setLoading(false)
@@ -134,7 +134,7 @@ export default function ClientForm() {
                     placeholder="Jean Dupont"
                     value={form.client}
                     onChange={e => setForm({...form, client: e.target.value})}
-                    className={`h-14 rounded-2xl bg-gray-50 border-gray-100 text-lg focus:ring-blue-500 ${errors.client ? 'border-red-500' : ''}`}
+                    className={`h-14 rounded-2xl bg-gray-50 border-gray-100 text-lg text-gray-900 focus:ring-blue-500 ${errors.client ? 'border-red-500' : ''}`}
                   />
                   {errors.client && <p className="text-xs text-red-500 font-bold">{errors.client}</p>}
                 </div>
@@ -146,7 +146,7 @@ export default function ClientForm() {
                     placeholder="06 00 00 00 00"
                     value={form.clientPhone}
                     onChange={e => setForm({...form, clientPhone: e.target.value})}
-                    className={`h-14 rounded-2xl bg-gray-50 border-gray-100 text-lg focus:ring-blue-500 ${errors.clientPhone ? 'border-red-500' : ''}`}
+                    className={`h-14 rounded-2xl bg-gray-50 border-gray-100 text-lg text-gray-900 focus:ring-blue-500 ${errors.clientPhone ? 'border-red-500' : ''}`}
                   />
                   {errors.clientPhone && <p className="text-xs text-red-500 font-bold">{errors.clientPhone}</p>}
                 </div>
@@ -168,7 +168,7 @@ export default function ClientForm() {
                     placeholder="Ex: iPhone 13 Pro, Samsung S22..."
                     value={form.phone}
                     onChange={e => setForm({...form, phone: e.target.value})}
-                    className={`h-14 rounded-2xl bg-gray-50 border-gray-100 text-lg focus:ring-blue-500 ${errors.phone ? 'border-red-500' : ''}`}
+                    className={`h-14 rounded-2xl bg-gray-50 border-gray-100 text-lg text-gray-900 focus:ring-blue-500 ${errors.phone ? 'border-red-500' : ''}`}
                   />
                   {errors.phone && <p className="text-xs text-red-500 font-bold">{errors.phone}</p>}
                 </div>
@@ -217,6 +217,29 @@ export default function ClientForm() {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Section 4: Prix */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm font-bold text-blue-600 uppercase tracking-widest pl-1">
+              <Euro className="w-4 h-4" /> Prix Estimé / Acompte
+            </div>
+            <Card className="border-0 shadow-sm rounded-3xl overflow-hidden bg-white">
+              <CardContent className="p-6">
+                <div className="space-y-2">
+                  <Label htmlFor="price" className="text-sm font-bold text-gray-700">Montant (€)</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    placeholder="0.00"
+                    value={form.price}
+                    onChange={e => setForm({...form, price: e.target.value})}
+                    className="h-14 rounded-2xl bg-gray-50 border-gray-100 text-lg text-gray-900 focus:ring-blue-500"
+                  />
+                  <p className="text-[10px] text-gray-400 font-medium">Laissez à 0 si le prix n'est pas encore fixé.</p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           <div className="pt-4 space-y-4">

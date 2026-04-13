@@ -53,6 +53,7 @@ const emptyForm = {
   cost: '',
   paymentMethod: 'Espèces',
   status: 'Terminé',
+  clientPhone: '',
   notes: '',
 }
 
@@ -75,7 +76,7 @@ export default function Ventes() {
   const filtered = sales
     .filter(s => {
       const q = search.toLowerCase()
-      const matchSearch = !q || [s.client, s.phone, s.service, s.status, s.type]
+      const matchSearch = !q || [s.client, s.phone, s.service, s.status, s.type, s.clientPhone || '']
         .some(v => v.toLowerCase().includes(q))
       const matchStatus = filterStatus === 'all' || s.status === filterStatus
       const matchType = filterType === 'all' || s.type === filterType
@@ -127,7 +128,7 @@ export default function Ventes() {
     if (!form.phone.trim()) errors.phone = 'Modèle de téléphone requis'
     const service = form.service === 'Autre' ? customService : form.service
     if (!service.trim()) errors.service = 'Service requis'
-    if (!form.price || isNaN(form.price)) errors.price = 'Prix valide requis'
+    if (form.price === '' || isNaN(form.price)) errors.price = 'Prix valide requis'
     return errors
   }
 
@@ -160,7 +161,7 @@ export default function Ventes() {
   const handleGenerateInvoice = (sale) => {
     const invoice = {
       clientName: sale.client,
-      clientPhone: '',
+      clientPhone: sale.clientPhone || '',
       clientAddress: '',
       items: [
         { 
@@ -178,19 +179,35 @@ export default function Ventes() {
   }
 
   // ─── Export CSV ───────────────────────────────────────────────────
-  const exportCSV = () => {
-    const headers = ['ID', 'Date', 'Client', 'Téléphone', 'Type', 'Service', 'Prix', 'Coût', 'Bénéfice', 'Paiement', 'Statut']
+  const exportExcel = () => {
+    const headers = ['ID', 'Date', 'Client', 'Contact (Tel)', 'Appareil', 'Type', 'Service', 'Prix (€)', 'Coût (€)', 'Bénéfice (€)', 'Paiement', 'Statut']
     const rows = filtered.map(s => [
-      s.id, s.date, s.client, s.phone, s.type, s.service,
-      s.price, s.cost, s.profit, s.paymentMethod, s.status
+      s.id,
+      new Date(s.date).toLocaleDateString('fr-FR'),
+      s.client,
+      s.clientPhone || '-',
+      s.phone,
+      s.type,
+      s.service,
+      (parseFloat(s.price) || 0).toFixed(2),
+      (parseFloat(s.cost) || 0).toFixed(2),
+      (parseFloat(s.profit) || 0).toFixed(2),
+      s.paymentMethod,
+      s.status
     ])
-    const csv = [headers, ...rows].map(r => r.join(',')).join('\n')
-    const blob = new Blob([csv], { type: 'text/csv' })
+
+    // Excel friendly CSV: UTF-8 BOM + semicolon separator + sep=; marker
+    const csvContent = "sep=;\n" + [headers, ...rows]
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';'))
+      .join('\n')
+
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `ventes-${new Date().toISOString().split('T')[0]}.csv`
-    a.click()
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `suivi_ventes_brigade_${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
   }
 
   return (
@@ -254,9 +271,9 @@ export default function Ventes() {
 
           {/* Actions */}
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={exportCSV} className="h-10">
+            <Button variant="outline" size="sm" onClick={exportExcel} className="h-10">
               <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">Exporter</span>
+              <span className="hidden sm:inline">Export Excel</span>
             </Button>
             <Button onClick={openAdd} className="h-10 gap-2">
               <Plus className="w-4 h-4" />
@@ -304,6 +321,7 @@ export default function Ventes() {
                       </span>
                     </TableHead>
                   ))}
+                  <TableHead>Contact</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -354,8 +372,20 @@ export default function Ventes() {
                             {sale.status}
                           </Badge>
                         </TableCell>
+                        <TableCell className="text-sm font-medium text-blue-400">
+                          {sale.clientPhone || '-'}
+                        </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {sale.status !== 'Terminé' && (
+                              <button
+                                onClick={() => updateSale(sale.id, { status: 'Terminé' })}
+                                className="p-1.5 rounded-md hover:bg-green-500/20 text-muted-foreground hover:text-green-400 transition-colors"
+                                title="Clôturer la vente"
+                              >
+                                <CheckCircle className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                             <button
                               onClick={() => handleGenerateInvoice(sale)}
                               className="p-1.5 rounded-md hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
@@ -445,6 +475,19 @@ export default function Ventes() {
                 />
                 {formErrors.client && <p className="text-xs text-red-400">{formErrors.client}</p>}
               </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="clientPhone">Numéro de téléphone client</Label>
+                <Input
+                  id="clientPhone"
+                  placeholder="Ex: 06 00 00 00 00"
+                  value={form.clientPhone || ''}
+                  onChange={e => handleChange('clientPhone', e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Price Selection / Device Info */}
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="phone">Modèle téléphone *</Label>
                 <Input

@@ -1,156 +1,61 @@
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useState, useEffect } from 'react'
 
-// Initial demo data
-const initialSales = [
-  {
-    id: 1,
-    date: '2026-04-10',
-    client: 'Ahmed Benali',
-    phone: 'iPhone 13',
-    type: 'Réparation',
-    service: 'Remplacement écran',
-    price: 89,
-    cost: 35,
-    profit: 54,
-    status: 'Terminé',
-    paymentMethod: 'Espèces',
-    notes: 'Écran OLED original'
-  },
-  {
-    id: 2,
-    date: '2026-04-10',
-    client: 'Fatima Zohra',
-    phone: 'Samsung S22',
-    type: 'Réparation',
-    service: 'Remplacement batterie',
-    price: 45,
-    cost: 18,
-    profit: 27,
-    status: 'Terminé',
-    paymentMethod: 'Carte',
-    notes: ''
-  },
-  {
-    id: 3,
-    date: '2026-04-09',
-    client: 'Mohamed Ait',
-    phone: 'Huawei P30',
-    type: 'Réparation',
-    service: 'Remplacement écran',
-    price: 75,
-    cost: 28,
-    profit: 47,
-    status: 'En cours',
-    paymentMethod: 'Espèces',
-    notes: 'En attente de pièce'
-  },
-  {
-    id: 4,
-    date: '2026-04-09',
-    client: 'Sarah Mansouri',
-    phone: 'iPhone 12',
-    type: 'Vente',
-    service: 'Coque protection',
-    price: 15,
-    cost: 4,
-    profit: 11,
-    status: 'Terminé',
-    paymentMethod: 'Espèces',
-    notes: ''
-  },
-  {
-    id: 5,
-    date: '2026-04-08',
-    client: 'Youcef Hamidi',
-    phone: 'Xiaomi 11',
-    type: 'Réparation',
-    service: 'Réparation connecteur de charge',
-    price: 35,
-    cost: 8,
-    profit: 27,
-    status: 'Terminé',
-    paymentMethod: 'Virement',
-    notes: ''
-  },
-  {
-    id: 6,
-    date: '2026-04-08',
-    client: 'Nassima Kaci',
-    phone: 'iPhone 14 Pro',
-    type: 'Réparation',
-    service: 'Remplacement écran',
-    price: 149,
-    cost: 65,
-    profit: 84,
-    status: 'Terminé',
-    paymentMethod: 'Carte',
-    notes: 'Écran original Apple'
-  },
-  {
-    id: 7,
-    date: '2026-04-07',
-    client: 'Karim Bouzid',
-    phone: 'Oppo Reno 8',
-    type: 'Réparation',
-    service: 'Remplacement batterie',
-    price: 40,
-    cost: 15,
-    profit: 25,
-    status: 'En attente',
-    paymentMethod: 'Espèces',
-    notes: 'Client à rappeler'
-  },
-  {
-    id: 8,
-    date: '2026-04-07',
-    client: 'Amina Bensalem',
-    phone: 'Samsung A53',
-    type: 'Vente',
-    service: 'Verre trempé',
-    price: 8,
-    cost: 1.5,
-    profit: 6.5,
-    status: 'Terminé',
-    paymentMethod: 'Espèces',
-    notes: ''
-  },
-  {
-    id: 9,
-    date: '2026-04-06',
-    client: 'Rachid Tlemcani',
-    phone: 'iPhone 11',
-    type: 'Réparation',
-    service: 'Remplacement écran',
-    price: 79,
-    cost: 32,
-    profit: 47,
-    status: 'Terminé',
-    paymentMethod: 'Carte',
-    notes: ''
-  },
-  {
-    id: 10,
-    date: '2026-04-05',
-    client: 'Houria Meziane',
-    phone: 'Realme 9',
-    type: 'Réparation',
-    service: 'Réparation micro',
-    price: 30,
-    cost: 10,
-    profit: 20,
-    status: 'Terminé',
-    paymentMethod: 'Espèces',
-    notes: ''
-  },
-]
+// Empty data for testing
+const initialSales = []
 
 const ShopContext = createContext()
 
 export function ShopProvider({ children }) {
-  const [sales, setSales] = useState(initialSales)
-  const [nextId, setNextId] = useState(11)
-  const [invoices, setInvoices] = useState([])
-  const [nextInvoiceId, setNextInvoiceId] = useState(1)
+  const [sales, setSales] = useState(() => {
+    // We use a versioned key to force a reset if needed, or just allow manual clear
+    const saved = localStorage.getItem('bm_sales_test')
+    return saved ? JSON.parse(saved) : initialSales
+  })
+  const [nextId, setNextId] = useState(() => {
+    const saved = localStorage.getItem('bm_next_id_test')
+    return saved ? parseInt(saved) : 1
+  })
+  const [invoices, setInvoices] = useState(() => {
+    const saved = localStorage.getItem('bm_invoices_test')
+    return saved ? JSON.parse(saved) : []
+  })
+  const [nextInvoiceId, setNextInvoiceId] = useState(() => {
+    const saved = localStorage.getItem('bm_next_inv_id_test')
+    return saved ? parseInt(saved) : 1
+  })
+
+  // Persistence
+  useEffect(() => {
+    localStorage.setItem('bm_sales_test', JSON.stringify(sales))
+    localStorage.setItem('bm_next_id_test', nextId.toString())
+  }, [sales, nextId])
+
+  useEffect(() => {
+    localStorage.setItem('bm_invoices_test', JSON.stringify(invoices))
+    localStorage.setItem('bm_next_inv_id_test', nextInvoiceId.toString())
+  }, [invoices, nextInvoiceId])
+
+  // Cross-tab synchronization
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'bm_sales_test' && e.newValue) {
+        setSales(JSON.parse(e.newValue))
+      }
+      if (e.key === 'bm_invoices_test' && e.newValue) {
+        setInvoices(JSON.parse(e.newValue))
+      }
+      if (e.key === 'bm_next_id_test' && e.newValue) {
+        setNextId(parseInt(e.newValue))
+      }
+      if (e.key === 'bm_next_inv_id_test' && e.newValue) {
+        setNextInvoiceId(parseInt(e.newValue))
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [])
+
 
   const addSale = (sale) => {
     const newSale = {

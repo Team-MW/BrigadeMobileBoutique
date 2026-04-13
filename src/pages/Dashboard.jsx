@@ -64,7 +64,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 export default function Dashboard() {
-  const { getStats, sales } = useShop()
+  const { getStats, sales, updateSale } = useShop()
   const [period, setPeriod] = useState('month')
   const stats = getStats(period)
 
@@ -277,14 +277,25 @@ export default function Dashboard() {
                       <p className="text-xs text-muted-foreground">{sale.phone} · {sale.service}</p>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right flex flex-col items-end gap-1">
                     <p className="text-sm font-bold text-foreground">{parseFloat(sale.price).toFixed(2)} €</p>
-                    <Badge
-                      variant={sale.status === 'Terminé' ? 'success' : sale.status === 'En cours' ? 'warning' : 'secondary'}
-                      className="text-xs"
-                    >
-                      {sale.status}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      {sale.status !== 'Terminé' && (
+                        <button 
+                          onClick={() => updateSale(sale.id, { status: 'Terminé' })}
+                          className="p-1 rounded-md hover:bg-green-500/20 text-green-400 transition-colors"
+                          title="Valider"
+                        >
+                          <CheckCircle className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      <Badge
+                        variant={sale.status === 'Terminé' ? 'success' : sale.status === 'En cours' ? 'warning' : 'secondary'}
+                        className="text-xs"
+                      >
+                        {sale.status === 'En attente' && sale.type === 'Réparation' ? 'Dépôt' : sale.status}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
               ))}
