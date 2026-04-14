@@ -18,15 +18,27 @@ export function ShopProvider({ children }) {
         .order('date', { ascending: false })
       
       if (salesError) throw salesError
-      setSales(salesData || [])
+      const mappedSales = (salesData || []).map(s => ({
+        ...s,
+        clientPhone: s.clientphone,
+        paymentMethod: s.paymentmethod
+      }))
+      setSales(mappedSales)
 
       const { data: invoicesData, error: invoicesError } = await supabase
         .from('invoices')
         .select('*')
-        .order('createdAt', { ascending: false })
+        .order('createdat', { ascending: false })
       
       if (invoicesError) throw invoicesError
-      setInvoices(invoicesData || [])
+      const mappedInvoices = (invoicesData || []).map(inv => ({
+        ...inv,
+        clientName: inv.clientname,
+        clientPhone: inv.clientphone,
+        clientAddress: inv.clientaddress,
+        createdAt: inv.createdat || inv.inserted_at
+      }))
+      setInvoices(mappedInvoices)
     } catch (error) {
       console.error('Error fetching data:', error.message)
     } finally {
@@ -42,9 +54,13 @@ export function ShopProvider({ children }) {
       .channel('sales-channel')
       .on('postgres_changes', { event: '*', table: 'sales' }, (payload) => {
         if (payload.eventType === 'INSERT') {
-          setSales(prev => [payload.new, ...prev])
+          const s = payload.new
+          const mapped = { ...s, clientPhone: s.clientphone, paymentMethod: s.paymentmethod }
+          setSales(prev => [mapped, ...prev])
         } else if (payload.eventType === 'UPDATE') {
-          setSales(prev => prev.map(s => s.id === payload.new.id ? payload.new : s))
+          const s = payload.new
+          const mapped = { ...s, clientPhone: s.clientphone, paymentMethod: s.paymentmethod }
+          setSales(prev => prev.map(item => item.id === s.id ? mapped : item))
         } else if (payload.eventType === 'DELETE') {
           setSales(prev => prev.filter(s => s.id !== payload.old.id))
         }
@@ -74,7 +90,7 @@ export function ShopProvider({ children }) {
     // Explicitly select fields to match the database schema
     const saleData = {
       client: sale.client,
-      clientPhone: sale.clientPhone,
+      clientphone: sale.clientPhone || '',
       phone: sale.phone,
       service: sale.service,
       type: sale.type || 'Réparation',
@@ -82,7 +98,7 @@ export function ShopProvider({ children }) {
       cost: parseFloat(sale.cost) || 0,
       profit: profit,
       status: sale.status || 'En attente',
-      paymentMethod: sale.paymentMethod || sale.paymentPreference || 'Espèces',
+      paymentmethod: sale.paymentMethod || sale.paymentPreference || 'Espèces',
       notes: sale.notes || '',
       date: sale.date || new Date().toISOString().split('T')[0]
     }
@@ -109,6 +125,16 @@ export function ShopProvider({ children }) {
       finalUpdates.profit = (parseFloat(newPrice) || 0) - (parseFloat(newCost) || 0)
     }
 
+    // Map camelCase back to lowercase for DB
+    if (finalUpdates.clientPhone !== undefined) {
+      finalUpdates.clientphone = finalUpdates.clientPhone
+      delete finalUpdates.clientPhone
+    }
+    if (finalUpdates.paymentMethod !== undefined) {
+      finalUpdates.paymentmethod = finalUpdates.paymentMethod
+      delete finalUpdates.paymentMethod
+    }
+
     const { error } = await supabase
       .from('sales')
       .update(finalUpdates)
@@ -132,12 +158,13 @@ export function ShopProvider({ children }) {
     
     const newInvoice = {
       id: invoiceSlug,
-      clientName: invoiceData.clientName,
-      clientPhone: invoiceData.clientPhone || '',
+      clientname: invoiceData.clientName,
+      clientphone: invoiceData.clientPhone || '',
+      clientaddress: invoiceData.clientAddress || '',
       total: parseFloat(invoiceData.total) || 0,
       items: invoiceData.items || [],
       notes: invoiceData.notes || '',
-      createdAt: new Date().toISOString(),
+      createdat: new Date().toISOString(),
     }
 
     const { data, error } = await supabase
