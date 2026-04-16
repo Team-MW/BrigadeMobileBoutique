@@ -63,10 +63,9 @@ export default function ClientForm() {
 
   const validate = () => {
     const e = {}
+    // Only strictly require Name and Phone for contact, everything else can be 'Non précisé'
     if (!form.client.trim()) e.client = 'Votre nom est requis'
     if (!form.clientPhone.trim()) e.clientPhone = 'Votre numéro est requis'
-    if (!form.phone.trim()) e.phone = 'Le modèle est requis'
-    if (!form.service) e.service = 'Choisissez le type de panne'
     return e
   }
 
@@ -84,24 +83,30 @@ export default function ClientForm() {
 
     const finalService = form.service === 'Autre / Diagnostic' ? form.secondaryService : form.service
     
-    const result = await addSale({
-      ...form,
+    // Provide safe defaults for all fields to avoid Supabase rejections
+    const saleData = {
+      client: form.client || 'Client Anonyme',
+      clientPhone: form.clientPhone || '0000000000',
+      phone: form.phone || 'Appareil non précisé',
       service: finalService || 'Diagnostic à faire',
-      clientPhone: form.clientPhone,
+      email: form.email || '',
       date: new Date().toISOString().split('T')[0],
       type: 'Réparation',
       price: parseFloat(form.price) || 0,
       cost: 0,
       status: 'En attente',
-      paymentMethod: form.paymentPreference,
-      notes: form.notes
-    })
+      paymentMethod: form.paymentPreference || 'Espèces',
+      notes: form.notes || ''
+    }
+
+    const result = await addSale(saleData)
 
     setLoading(false)
     if (result) {
       setSubmitted(true)
     } else {
-      alert("Erreur lors de l'enregistrement. Veuillez réessayer ou contacter le magasin.")
+      // If it fails, we show a more encouraging message and let them try again
+      alert("Petit problème technique. Pas d'inquiétude, réessayez une fois ou montrez cet écran au technicien.")
     }
   }
 
@@ -168,7 +173,7 @@ export default function ClientForm() {
                     onChange={e => setForm({...form, client: e.target.value})}
                     className={`h-14 rounded-2xl bg-gray-50 border-gray-100 text-lg text-gray-900 focus:ring-blue-500 ${errors.client ? 'border-red-500' : ''}`}
                   />
-                  {errors.client && <p className="text-xs text-red-500 font-bold">{errors.client}</p>}
+                  {errors.client ? <p className="text-xs text-red-500 font-bold">{errors.client}</p> : <p className="text-[10px] text-gray-400">Indiquez votre nom complet pour vous identifier.</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="clientPhone" className="text-sm font-bold text-gray-700">Numéro de téléphone</Label>
@@ -180,7 +185,7 @@ export default function ClientForm() {
                     onChange={e => setForm({...form, clientPhone: e.target.value})}
                     className={`h-14 rounded-2xl bg-gray-50 border-gray-100 text-lg text-gray-900 focus:ring-blue-500 ${errors.clientPhone ? 'border-red-500' : ''}`}
                   />
-                  {errors.clientPhone && <p className="text-xs text-red-500 font-bold">{errors.clientPhone}</p>}
+                  {errors.clientPhone ? <p className="text-xs text-red-500 font-bold">{errors.clientPhone}</p> : <p className="text-[10px] text-gray-400">Important : nous vous appellerons sur ce numéro.</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-sm font-bold text-gray-700">Adresse Email (Optionnel)</Label>
@@ -192,6 +197,7 @@ export default function ClientForm() {
                     onChange={e => setForm({...form, email: e.target.value})}
                     className="h-14 rounded-2xl bg-gray-50 border-gray-100 text-lg text-gray-900 focus:ring-blue-500"
                   />
+                  <p className="text-[10px] text-gray-400">Pour recevoir votre facture par mail.</p>
                 </div>
               </CardContent>
             </Card>
@@ -213,10 +219,11 @@ export default function ClientForm() {
                     onChange={e => setForm({...form, phone: e.target.value})}
                     className={`h-14 rounded-2xl bg-gray-50 border-gray-100 text-lg text-gray-900 focus:ring-blue-500 ${errors.phone ? 'border-red-500' : ''}`}
                   />
-                  {errors.phone && <p className="text-xs text-red-500 font-bold">{errors.phone}</p>}
+                  <p className="text-[10px] text-gray-400">Si vous ne savez pas, écrivez "Inconnu".</p>
                 </div>
                 <div className="space-y-4">
                   <Label className="text-sm font-bold text-gray-700">Type de panne</Label>
+                  <p className="text-[10px] text-gray-400 mb-2">Sélectionnez le problème principal :</p>
                   <div className="grid grid-cols-2 gap-2">
                     {PANNES.map(p => (
                       <button

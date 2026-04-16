@@ -127,23 +127,27 @@ export function ShopProvider({ children }) {
 
   const addSale = async (sale) => {
     try {
-      const profit = (parseFloat(sale.price) || 0) - (parseFloat(sale.cost) || 0)
+      const price = parseFloat(sale.price) || 0
+      const cost = parseFloat(sale.cost) || 0
+      const profit = price - cost
       
       const saleData = {
-        client: sale.client,
-        clientphone: sale.clientPhone || '',
-        email: sale.email || '',
-        phone: sale.phone,
-        service: sale.service,
+        client: String(sale.client || 'Inconnu').substring(0, 100),
+        clientphone: String(sale.clientPhone || '').substring(0, 20),
+        email: String(sale.email || '').substring(0, 100),
+        phone: String(sale.phone || 'Non précisé').substring(0, 100),
+        service: String(sale.service || 'Diagnostic').substring(0, 100),
         type: sale.type || 'Réparation',
-        price: parseFloat(sale.price) || 0,
-        cost: parseFloat(sale.cost) || 0,
+        price: price,
+        cost: cost,
         profit: profit,
         status: sale.status || 'En attente',
         paymentmethod: sale.paymentMethod || sale.paymentPreference || 'Espèces',
-        notes: sale.notes || '',
+        notes: String(sale.notes || '').substring(0, 500),
         date: sale.date || new Date().toISOString().split('T')[0]
       }
+
+      console.log('Attempting to add sale:', saleData)
 
       const { data, error } = await supabase
         .from('sales')
@@ -151,12 +155,12 @@ export function ShopProvider({ children }) {
         .select()
       
       if (error) {
-        console.error('Error adding sale:', error)
+        console.error('Supabase Error in addSale:', error)
         throw error
       }
       return data[0]
     } catch (error) {
-      console.error('Detailed error in addSale:', error)
+      console.error('Crash in addSale function:', error)
       return null
     }
   }
