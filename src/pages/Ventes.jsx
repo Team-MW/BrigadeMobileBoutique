@@ -44,7 +44,7 @@ const TYPES = ['Réparation', 'Vente']
 const STATUSES = ['Terminé', 'En cours', 'En attente']
 
 const emptyForm = {
-  date: new Date().toISOString().split('T')[0],
+  date: '',
   client: '',
   phone: '',
   type: 'Réparation',
@@ -76,12 +76,6 @@ export default function Ventes() {
   const filtered = sales
     .filter(s => {
       const q = search.toLowerCase()
-      const searchFields = [
-        s.client, 
-        s.phone, 
-        s.service, 
-        s.status, 
-      
       const matchSearch = !q || [
         s.client || '', 
         s.phone || '', 
@@ -89,6 +83,7 @@ export default function Ventes() {
         s.status || '', 
         s.type || '', 
         s.clientPhone || '',
+        s.paymentMethod || '',
         s.email || ''
       ].some(v => v.toLowerCase().includes(q))
       const matchStatus = filterStatus === 'all' || s.status === filterStatus
@@ -120,7 +115,7 @@ export default function Ventes() {
 
   // ─── Form handlers ────────────────────────────────────────────────
   const openAdd = () => {
-    setForm(emptyForm)
+    setForm({ ...emptyForm, date: new Date().toISOString().split('T')[0] })
     setEditingSale(null)
     setFormErrors({})
     setCustomService('')
