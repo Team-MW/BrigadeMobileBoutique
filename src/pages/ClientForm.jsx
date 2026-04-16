@@ -63,50 +63,43 @@ export default function ClientForm() {
 
   const validate = () => {
     const e = {}
-    // Only strictly require Name and Phone for contact, everything else can be 'Non précisé'
     if (!form.client.trim()) e.client = 'Votre nom est requis'
     if (!form.clientPhone.trim()) e.clientPhone = 'Votre numéro est requis'
+    if (!form.phone.trim()) e.phone = 'Le modèle est requis'
+    if (!form.service) e.service = 'Choisissez le type de panne'
     return e
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const validationErrors = validate()
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+    const errors = validate()
+    if (Object.keys(errors).length > 0) {
+      setErrors(errors)
       return
     }
 
     setLoading(true)
-    await new Promise(r => setTimeout(r, 600))
 
     const finalService = form.service === 'Autre / Diagnostic' ? form.secondaryService : form.service
     
-    // Provide safe defaults for all fields to avoid Supabase rejections
-    const saleData = {
-      client: form.client || 'Client Anonyme',
-      clientPhone: form.clientPhone || '0000000000',
-      phone: form.phone || 'Appareil non précisé',
+    const result = await addSale({
+      ...form,
       service: finalService || 'Diagnostic à faire',
-      email: form.email || '',
+      clientPhone: form.clientPhone,
       date: new Date().toISOString().split('T')[0],
       type: 'Réparation',
       price: parseFloat(form.price) || 0,
       cost: 0,
       status: 'En attente',
-      paymentMethod: form.paymentPreference || 'Espèces',
-      notes: form.notes || ''
-    }
-
-    const result = await addSale(saleData)
+      paymentMethod: form.paymentPreference,
+      notes: form.notes
+    })
 
     setLoading(false)
     if (result) {
       setSubmitted(true)
     } else {
-      // If it fails, we show a more encouraging message and let them try again
-      alert("Petit problème technique. Pas d'inquiétude, réessayez une fois ou montrez cet écran au technicien.")
+      alert("Erreur lors de l'enregistrement. Veuillez réessayer ou contacter le magasin.")
     }
   }
 
