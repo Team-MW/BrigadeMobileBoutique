@@ -102,6 +102,43 @@ export default function Debug() {
             </div>
           </div>
         )}
+
+        <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 space-y-4">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-primary">Test d'insertion Facture</h2>
+          <p className="text-xs text-muted-foreground">Cliquez pour tenter d'insérer une facture de test et voir l'erreur exacte.</p>
+          <button 
+            onClick={async () => {
+              const testObj = { clientname: 'TEST DEBUG', total: 10 }
+              const { data, error } = await supabase.from('invoices').insert([testObj]).select()
+              if (error) {
+                alert("ÉCHEC : " + error.message)
+                console.error(error)
+              } else {
+                alert("SUCCÈS ! ID: " + data[0].id)
+                await supabase.from('invoices').delete().eq('clientname', 'TEST DEBUG')
+              }
+            }}
+            className="w-full py-2 bg-primary text-primary-foreground rounded-lg font-bold text-sm hover:opacity-90 active:scale-95 transition-all"
+          >
+            Lancer le test (clientname, total)
+          </button>
+          
+          <button 
+            onClick={async () => {
+              const testObj = { client_name: 'TEST DEBUG', total_amount: 10 }
+              const { data, error } = await supabase.from('invoices').insert([testObj]).select()
+              if (error) {
+                alert("ÉCHEC : " + error.message)
+              } else {
+                alert("SUCCÈS ! ID: " + data[0].id)
+                await supabase.from('invoices').delete().eq('client_name', 'TEST DEBUG')
+              }
+            }}
+            className="w-full py-2 border border-primary/50 text-primary rounded-lg font-bold text-sm hover:bg-primary/10 active:scale-95 transition-all"
+          >
+            Lancer le test (client_name, total_amount)
+          </button>
+        </div>
       </div>
 
       <div className="text-sm text-muted-foreground bg-blue-500/10 p-4 rounded-lg border border-blue-500/20 max-w-2xl">

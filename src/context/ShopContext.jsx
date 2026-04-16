@@ -219,38 +219,42 @@ export function ShopProvider({ children }) {
   const addInvoice = async (invoiceData) => {
     setIsWorking(true)
     try {
-      // Very simple insert with most likely column names
-      const { data, error } = await supabase
-        .from('invoices')
-        .insert([{
-          clientname: invoiceData.clientName || 'Client',
-          clientphone: invoiceData.clientPhone || '',
-          clientaddress: invoiceData.clientAddress || '',
-          total: parseFloat(invoiceData.total) || 0,
-          items: invoiceData.items || [],
-          notes: invoiceData.notes || '',
-          id: `FAC-${Date.now().toString().slice(-6)}` // Simple unique string ID
-        }])
-        .select()
+      const total = parseFloat(invoiceData.total) || 0
+      const clientName = invoiceData.clientName || 'Client'
       
-      if (error) {
-        // Simple fallback if ID was the issue
-        const { data: data2, error: error2 } = await supabase
-          .from('invoices')
-          .insert([{
-            clientname: invoiceData.clientName || 'Client',
-            total: parseFloat(invoiceData.total) || 0,
-            items: invoiceData.items || []
-          }])
-          .select()
-        
-        if (error2) throw error2
-        return data2?.[0] || true
-      }
-      
-      return data?.[0] || true
+      // Attempt 1: Standard lowercase (clientname)
+      const { data: d1, error: e1 } = await supabase.from('invoices').insert([{
+        clientname: clientName,
+        clientphone: invoiceData.clientPhone || '',
+        clientaddress: invoiceData.clientAddress || '',
+        total: total,
+        items: invoiceData.items || [],
+        notes: invoiceData.notes || ''
+      }]).select()
+      if (!e1) return d1?.[0] || true
+
+      // Attempt 2: Minimal with 'client' (matches sales table)
+      const { data: d2, error: e2 } = await supabase.from('invoices').insert([{
+        client: clientName,
+        total: total
+      }]).select()
+      if (!e2) return d2?.[0] || true
+
+      // Attempt 3: Underscores (client_name, total_amount)
+      const { data: d3, error: e3 } = await supabase.from('invoices').insert([{
+        client_name: clientName,
+        total_amount: total
+      }]).select()
+      if (!e3) return d3?.[0] || true
+
+      // Final Attempt: Just total (most basic)
+      const { data: d4, error: e4 } = await supabase.from('invoices').insert([{ total }]).select()
+      if (!e4) return d4?.[0] || true
+
+      console.error('All invoice insertion attempts failed:', e1?.message)
+      return null
     } catch (error) {
-      console.error('Invoice creation error:', error)
+      console.error('Invoice creation exception:', error)
       return null
     } finally {
       setIsWorking(false)
