@@ -71,6 +71,7 @@ export default function ClientForm() {
     acompte: '0',
     notes: '',
     imei: '',
+    unlockCode: '',
   })
 
   const [errors, setErrors] = useState({})
@@ -118,7 +119,7 @@ export default function ClientForm() {
   }
 
   const reset = () => {
-    setForm({ client: '', clientPhone: '', phone: '', imei: '', service: '', paymentPreference: 'Espèces', notes: '', price: '0', acompte: '0' })
+    setForm({ client: '', clientPhone: '', phone: '', imei: '', unlockCode: '', service: '', paymentPreference: 'Espèces', notes: '', price: '0', acompte: '0' })
     setErrors({})
     setSubmitted(false)
   }
@@ -232,16 +233,27 @@ export default function ClientForm() {
                   </datalist>
                   <p className="text-[10px] text-gray-400">Si vous ne savez pas, écrivez "Inconnu".</p>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="imei" className="text-sm font-bold text-gray-700">N° IMEI (Optionnel)</Label>
-                  <Input
-                    id="imei"
-                    placeholder="Tapez *#06# pour l'obtenir"
-                    value={form.imei}
-                    onChange={e => setForm({...form, imei: e.target.value})}
-                    className="h-14 rounded-2xl bg-gray-50 border-gray-100 text-lg text-gray-900 focus:ring-blue-500"
-                  />
-                  <p className="text-[10px] text-gray-400">Recommandé pour garantir la traçabilité de votre appareil.</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="imei" className="text-sm font-bold text-gray-700">N° IMEI (Optionnel)</Label>
+                    <Input
+                      id="imei"
+                      placeholder="Tapez *#06#"
+                      value={form.imei}
+                      onChange={e => setForm({...form, imei: e.target.value})}
+                      className="h-14 rounded-2xl bg-gray-50 border-gray-100 text-lg text-gray-900 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="unlockCode" className="text-sm font-bold text-gray-700">Code Déverrouillage</Label>
+                    <Input
+                      id="unlockCode"
+                      placeholder="Ex: 1234 ou schéma"
+                      value={form.unlockCode}
+                      onChange={e => setForm({...form, unlockCode: e.target.value})}
+                      className="h-14 rounded-2xl bg-gray-50 border-gray-100 text-lg text-gray-900 focus:ring-blue-500"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-4">
                   <Label className="text-sm font-bold text-gray-700">Type de panne</Label>

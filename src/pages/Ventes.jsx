@@ -69,6 +69,7 @@ const emptyForm = {
   clientPhone: '',
   notes: '',
   imei: '',
+  unlockCode: '',
 }
 
 export default function Ventes() {
@@ -162,7 +163,7 @@ export default function Ventes() {
     if (Object.keys(errors).length > 0) { setFormErrors(errors); return }
     
     const finalService = form.service === 'Autre' ? customService : form.service
-    const saleData = { ...form, service: finalService, imei: form.imei }
+    const saleData = { ...form, service: finalService, imei: form.imei, unlockCode: form.unlockCode }
     
     if (editingSale) {
       await updateSale(editingSale, saleData)
@@ -408,6 +409,7 @@ export default function Ventes() {
                         <TableCell className="text-sm text-muted-foreground">
                           <div>{sale.phone}</div>
                           {sale.imei && <div className="text-[10px] text-primary/70 font-mono">IMEI: {sale.imei}</div>}
+                          {sale.unlockCode && <div className="text-[10px] text-orange-400 font-bold">CODE: {sale.unlockCode}</div>}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1.5">
@@ -586,6 +588,15 @@ export default function Ventes() {
                   placeholder="N° IMEI"
                   value={form.imei || ''}
                   onChange={e => handleChange('imei', e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="unlockCode">Code Déverrouillage</Label>
+                <Input
+                  id="unlockCode"
+                  placeholder="Code ou Schéma"
+                  value={form.unlockCode || ''}
+                  onChange={e => handleChange('unlockCode', e.target.value)}
                 />
               </div>
             </div>

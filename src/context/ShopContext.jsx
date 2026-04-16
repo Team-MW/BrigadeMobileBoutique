@@ -28,7 +28,8 @@ export function ShopProvider({ children }) {
         paymentMethod: s.paymentmethod,
         email: s.email,
         imei: s.imei,
-        acompte: Number(s.acompte) || 0
+        acompte: Number(s.acompte) || 0,
+        unlockCode: s.unlock_code || s.unlockcode
       }))
       setSales(mappedSales)
 
@@ -77,7 +78,8 @@ export function ShopProvider({ children }) {
             paymentMethod: s.paymentmethod, 
             email: s.email,
             imei: s.imei,
-            acompte: Number(s.acompte) || 0
+            acompte: Number(s.acompte) || 0,
+            unlockCode: s.unlock_code || s.unlockcode
           }
           setSales(prev => [mapped, ...prev])
         } else if (payload.eventType === 'UPDATE') {
@@ -91,7 +93,8 @@ export function ShopProvider({ children }) {
             paymentMethod: s.paymentmethod, 
             email: s.email,
             imei: s.imei,
-            acompte: Number(s.acompte) || 0
+            acompte: Number(s.acompte) || 0,
+            unlockCode: s.unlock_code || s.unlockcode
           }
           setSales(prev => prev.map(item => item.id === s.id ? mapped : item))
         } else if (payload.eventType === 'DELETE') {
@@ -154,6 +157,7 @@ export function ShopProvider({ children }) {
         notes: sale.notes,
         imei: sale.imei,
         acompte: parseFloat(sale.acompte) || 0,
+        unlock_code: sale.unlockCode,
         date: sale.date || new Date().toISOString().split('T')[0],
         profit: (parseFloat(sale.price) || 0) - (parseFloat(sale.cost) || 0)
       }
