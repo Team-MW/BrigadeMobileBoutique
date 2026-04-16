@@ -127,29 +127,34 @@ export function ShopProvider({ children }) {
 
   const addSale = async (sale) => {
     try {
+      const saleRow = {
+        client: sale.client,
+        clientphone: sale.clientPhone,
+        phone: sale.phone,
+        service: sale.service,
+        type: sale.type || 'Réparation',
+        price: parseFloat(sale.price) || 0,
+        cost: parseFloat(sale.cost) || 0,
+        status: sale.status || 'En attente',
+        paymentmethod: sale.paymentMethod || sale.paymentPreference || 'Espèces',
+        notes: sale.notes,
+        date: sale.date || new Date().toISOString().split('T')[0]
+      }
+
       const { data, error } = await supabase
         .from('sales')
-        .insert([{
-          client: sale.client,
-          clientphone: sale.clientPhone,
-          email: sale.email,
-          phone: sale.phone,
-          service: sale.service,
-          type: sale.type || 'Réparation',
-          price: parseFloat(sale.price) || 0,
-          cost: parseFloat(sale.cost) || 0,
-          profit: (parseFloat(sale.price) || 0) - (parseFloat(sale.cost) || 0),
-          status: sale.status || 'En attente',
-          paymentmethod: sale.paymentMethod || sale.paymentPreference || 'Espèces',
-          notes: sale.notes,
-          date: sale.date || new Date().toISOString().split('T')[0]
-        }])
+        .insert([saleRow])
         .select()
       
-      if (error) throw error
-      return data[0]
+      if (error) {
+        console.error('Erreur d\'insertion Supabase:', error)
+        throw error
+      }
+      
+      // Retourne la ligne insérée si possible, sinon true pour indiquer le succès
+      return (data && data.length > 0) ? data[0] : true
     } catch (error) {
-      console.error('Error in addSale:', error)
+      console.error('Erreur détaillée dans addSale:', error)
       return null
     }
   }
