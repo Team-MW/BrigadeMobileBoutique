@@ -146,7 +146,8 @@ export function ShopProvider({ children }) {
         status: sale.status || 'En attente',
         paymentmethod: sale.paymentMethod || sale.paymentPreference || 'Espèces',
         notes: sale.notes,
-        date: sale.date || new Date().toISOString().split('T')[0]
+        date: sale.date || new Date().toISOString().split('T')[0],
+        profit: (parseFloat(sale.price) || 0) - (parseFloat(sale.cost) || 0)
       }
 
       const { data, error } = await supabase
@@ -167,34 +168,45 @@ export function ShopProvider({ children }) {
   const updateSale = async (id, updates) => {
     setIsWorking(true)
     try {
-      let finalUpdates = { ...updates }
+      // 1. Clean up updates (don't send internal fields or IDs)
+      const { 
+        id: _id, 
+        created_at, 
+        inserted_at, 
+        profit, 
+        clientPhone, 
+        paymentMethod,
+        clientName, // just in case
+        ...cleanUpdates 
+      } = updates
       
-      // If updating price or cost, recalculate profit
+      let finalUpdates = { ...cleanUpdates }
+      
+      // 2. Handle numbers if present
       if (updates.price !== undefined || updates.cost !== undefined) {
-        const { data: currentSale } = await supabase.from('sales').select('*').eq('id', id).single()
-        const newPrice = updates.price !== undefined ? updates.price : currentSale.price
-        const newCost = updates.cost !== undefined ? updates.cost : currentSale.cost
-        finalUpdates.profit = (parseFloat(newPrice) || 0) - (parseFloat(newCost) || 0)
+        // Fetch current values to calculate profit if one is missing
+        const { data: current } = await supabase.from('sales').select('*').eq('id', id).single()
+        const p = updates.price !== undefined ? parseFloat(updates.price) : current.price
+        const c = updates.cost !== undefined ? parseFloat(updates.cost) : current.cost
+        finalUpdates.price = p || 0
+        finalUpdates.cost = c || 0
+        finalUpdates.profit = (finalUpdates.price) - (finalUpdates.cost)
       }
 
-      // Map camelCase back to lowercase for DB
-      if (finalUpdates.clientPhone !== undefined) {
-        finalUpdates.clientphone = finalUpdates.clientPhone
-        delete finalUpdates.clientPhone
-      }
-      if (finalUpdates.paymentMethod !== undefined) {
-        finalUpdates.paymentmethod = finalUpdates.paymentMethod
-        delete finalUpdates.paymentMethod
-      }
+      // 3. Map camelCase fields back to their DB counterparts
+      if (updates.clientPhone !== undefined) finalUpdates.clientphone = updates.clientPhone
+      if (updates.paymentMethod !== undefined) finalUpdates.paymentmethod = updates.paymentMethod
       
+      console.log('Pushing updates to sales:', finalUpdates)
       const { error } = await supabase
         .from('sales')
         .update(finalUpdates)
         .eq('id', id)
       
       if (error) throw error
+      console.log('Update successful')
     } catch (error) {
-      console.error('Detailed error in updateSale:', error)
+      console.error('Erreur détaillée dans updateSale:', error)
     } finally {
       setIsWorking(false)
     }
@@ -341,9 +353,18 @@ export function ShopProvider({ children }) {
   }
 
   return (
-    <ShopContext.Provider value={{
-      sales, addSale, updateSale, deleteSale, getStats,
-      invoices, addInvoice, deleteInvoice, loading, isWorking
+    <ShopContext.Provider value={{ 
+      sales, 
+      invoices, 
+      loading, 
+      isWorking, 
+      fetchData,
+      addSale, 
+      updateSale, 
+      deleteSale, 
+      addInvoice, 
+      deleteInvoice,
+      getStats
     }}>
       {children}
     </ShopContext.Provider>

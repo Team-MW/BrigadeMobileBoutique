@@ -30,9 +30,7 @@ export default function Sidebar() {
         )}>
           {!collapsed && (
             <div className="flex items-center gap-3 animate-slide-in">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <Smartphone className="w-5 h-5 text-white" />
-              </div>
+              <img src="/logo.png" alt="Logo" className="w-8 h-8 rounded-lg object-contain" />
               <div>
                 <p className="text-sm font-bold text-sidebar-foreground leading-tight">Brigade Mobile</p>
                 <p className="text-xs text-muted-foreground">Réparation & Vente</p>
@@ -40,9 +38,7 @@ export default function Sidebar() {
             </div>
           )}
           {collapsed && (
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <Smartphone className="w-4 h-4 text-white" />
-            </div>
+            <img src="/logo.png" alt="Logo" className="w-8 h-8 rounded-lg object-contain" />
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}

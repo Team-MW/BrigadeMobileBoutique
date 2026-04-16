@@ -15,7 +15,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   Plus, Search, Filter, Edit, Trash2, Wrench, ShoppingBag,
   CheckCircle, Clock, AlertCircle, Download, ChevronUp, ChevronDown,
-  X, Euro, TrendingUp, FileText
+  X, Euro, TrendingUp, FileText, RefreshCw
 } from 'lucide-react'
 
 const STATUS_CONFIG = {
@@ -59,7 +59,7 @@ const emptyForm = {
 }
 
 export default function Ventes() {
-  const { sales, addSale, updateSale, deleteSale, addInvoice, loading, isWorking } = useShop()
+  const { sales, fetchData, addSale, updateSale, deleteSale, addInvoice, loading, isWorking } = useShop()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
@@ -296,25 +296,16 @@ export default function Ventes() {
             )}
           </div>
 
-          {/* Filters */}
-          <div className="flex gap-2 flex-wrap">
-            <select
-              value={filterStatus}
-              onChange={e => setFilterStatus(e.target.value)}
-              className="h-10 px-3 rounded-lg border border-border bg-secondary text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
-            >
-              <option value="all">Tous les statuts</option>
-              {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-            <select
-              value={filterType}
-              onChange={e => setFilterType(e.target.value)}
-              className="h-10 px-3 rounded-lg border border-border bg-secondary text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all"
-            >
-              <option value="all">Tous les types</option>
-              {TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </div>
+          {/* Refresh Button instead of filters */}
+          <Button 
+            variant="outline" 
+            onClick={fetchData} 
+            className="gap-2 h-10 px-4 rounded-lg bg-secondary/50 border-border hover:bg-secondary transition-all font-bold"
+            disabled={loading}
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Actualiser
+          </Button>
 
           {/* Actions */}
           <div className="flex gap-2">
