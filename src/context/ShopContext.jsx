@@ -42,9 +42,10 @@ export function ShopProvider({ children }) {
       const mappedInvoices = invoicesData.map(inv => ({
         ...inv,
         total: Number(inv.total) || 0,
-        clientName: inv.clientname,
-        clientPhone: inv.clientphone,
-        clientAddress: inv.clientaddress,
+        clientName: inv.clientname || inv.client_name || inv.client || 'Client',
+        clientPhone: inv.clientphone || inv.client_phone || '',
+        clientAddress: inv.clientaddress || inv.client_address || '',
+        items: inv.items || [],
         createdAt: inv.createdat || inv.inserted_at || inv.created_at || new Date().toISOString()
       })).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
 
@@ -101,10 +102,11 @@ export function ShopProvider({ children }) {
           const mapped = { 
             ...inv, 
             total: Number(inv.total) || 0,
-            clientName: inv.clientname, 
-            clientPhone: inv.clientphone, 
-            clientAddress: inv.clientaddress,
-            createdAt: inv.createdat || inv.inserted_at
+            clientName: inv.clientname || inv.client_name || inv.client || 'Client', 
+            clientPhone: inv.clientphone || inv.client_phone || '', 
+            clientAddress: inv.clientaddress || inv.client_address || '',
+            items: inv.items || [],
+            createdAt: inv.createdat || inv.inserted_at || inv.created_at
           }
           setInvoices(prev => [mapped, ...prev])
         } else if (payload.eventType === 'UPDATE') {
@@ -217,41 +219,36 @@ export function ShopProvider({ children }) {
   const addInvoice = async (invoiceData) => {
     setIsWorking(true)
     try {
-      // Extremely simple sequential ID based on timestamp if DB fetch fails
-      const nextIndex = Date.now().toString().slice(-4)
-      const invoiceSlug = `FAC-${new Date().getFullYear()}-${nextIndex}`
+      // Basic data
+      const total = parseFloat(invoiceData.total) || 0
+      const clientName = invoiceData.clientName || 'Sans nom'
       
-      const newInvoice = {
-        id: invoiceSlug,
-        clientname: invoiceData.clientName || 'Client',
+      // Attempt 1: Standard lowercase (most likely)
+      const attempt1 = {
+        clientname: clientName,
         clientphone: invoiceData.clientPhone || '',
         clientaddress: invoiceData.clientAddress || '',
-        total: parseFloat(invoiceData.total) || 0,
+        total: total,
         items: invoiceData.items || [],
         notes: invoiceData.notes || '',
       }
 
-      // If the table uses integer IDs, this will fail but the catch will retry without ID
-      const { data, error } = await supabase
-        .from('invoices')
-        .insert([newInvoice])
-        .select()
+      const { data, error } = await supabase.from('invoices').insert([attempt1]).select()
       
       if (error) {
-        console.warn('Initial insert failed, retrying without preset ID...', error.message)
-        const { id, ...rest } = newInvoice
-        const { data: retryData, error: retryError } = await supabase
-          .from('invoices')
-          .insert([rest])
-          .select()
+        console.warn('Standard insert failed, trying minimal...', error.message)
+        // Attempt 2: Minimal columns
+        const { data: data2, error: error2 } = await supabase.from('invoices').insert([{
+            clientname: clientName,
+            total: total
+        }]).select()
         
-        if (retryError) throw retryError
-        return retryData[0]
+        if (error2) throw error2
+        return data2?.[0] || true
       }
-      
       return data?.[0] || true
     } catch (error) {
-      console.error('Final failure in addInvoice:', error)
+      console.error('Final Invoice Error:', error)
       return null
     } finally {
       setIsWorking(false)

@@ -23,10 +23,12 @@ export default function Factures() {
     notes: ''
   })
 
-  const filtered = invoices.filter(inv => 
-    inv.clientName.toLowerCase().includes(search.toLowerCase()) ||
-    inv.id.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = invoices.filter(inv => {
+    const name = inv.clientName || ''
+    const id = inv.id || ''
+    return name.toLowerCase().includes(search.toLowerCase()) ||
+           id.toString().toLowerCase().includes(search.toLowerCase())
+  })
 
   const handleAddItem = () => {
     setForm(prev => ({
