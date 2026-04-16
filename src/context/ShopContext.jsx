@@ -7,6 +7,7 @@ export function ShopProvider({ children }) {
   const [sales, setSales] = useState([])
   const [invoices, setInvoices] = useState([])
   const [loading, setLoading] = useState(true)
+  const [isWorking, setIsWorking] = useState(false)
 
   // Fetch data from Supabase
   const fetchData = async () => {
@@ -130,6 +131,7 @@ export function ShopProvider({ children }) {
   }, [])
 
   const addSale = async (sale) => {
+    setIsWorking(true)
     try {
       const saleRow = {
         client: sale.client,
@@ -150,20 +152,18 @@ export function ShopProvider({ children }) {
         .insert([saleRow])
         .select()
       
-      if (error) {
-        console.error('Erreur d\'insertion Supabase:', error)
-        throw error
-      }
-      
-      // Retourne la ligne insérée si possible, sinon true pour indiquer le succès
+      if (error) throw error
       return (data && data.length > 0) ? data[0] : true
     } catch (error) {
       console.error('Erreur détaillée dans addSale:', error)
       return null
+    } finally {
+      setIsWorking(false)
     }
   }
 
   const updateSale = async (id, updates) => {
+    setIsWorking(true)
     try {
       let finalUpdates = { ...updates }
       
@@ -190,82 +190,71 @@ export function ShopProvider({ children }) {
         .update(finalUpdates)
         .eq('id', id)
       
-      if (error) {
-        console.error('Error updating sale:', error)
-        throw error
-      }
+      if (error) throw error
     } catch (error) {
       console.error('Detailed error in updateSale:', error)
+    } finally {
+      setIsWorking(false)
     }
   }
 
   const deleteSale = async (id) => {
-    const { error } = await supabase
-      .from('sales')
-      .delete()
-      .eq('id', id)
-    
-    if (error) console.error('Error deleting sale:', error.message)
+    setIsWorking(true)
+    try {
+      const { error } = await supabase
+        .from('sales')
+        .delete()
+        .eq('id', id)
+      
+      if (error) throw error
+    } catch (error) {
+      console.error('Error deleting sale:', error.message)
+    } finally {
+      setIsWorking(false)
+    }
   }
 
   const addInvoice = async (invoiceData) => {
+    setIsWorking(true)
     try {
-      // Fetch the latest invoices to get a proper sequential ID
-      // We try to order by createdat, but fallback to id if it fails
-      const { data: lastInvoices, error: fetchError } = await supabase
-        .from('invoices')
-        .select('id')
-        .order('id', { ascending: false })
-        .limit(1)
-
-      let nextIndex = (invoices && invoices.length > 0) ? invoices.length + 1 : 1
-      
-      if (lastInvoices && lastInvoices.length > 0) {
-        const lastId = String(lastInvoices[0].id)
-        const match = lastId.match(/-(\d+)$/)
-        if (match) {
-          nextIndex = parseInt(match[1]) + 1
-        }
-      }
-      
-      const invoiceSlug = `FAC-${new Date().getFullYear()}-${String(nextIndex).padStart(4, '0')}`
+      // Extremely simple sequential ID based on timestamp if DB fetch fails
+      const nextIndex = Date.now().toString().slice(-4)
+      const invoiceSlug = `FAC-${new Date().getFullYear()}-${nextIndex}`
       
       const newInvoice = {
         id: invoiceSlug,
-        clientname: invoiceData.clientName,
+        clientname: invoiceData.clientName || 'Client',
         clientphone: invoiceData.clientPhone || '',
         clientaddress: invoiceData.clientAddress || '',
         total: parseFloat(invoiceData.total) || 0,
         items: invoiceData.items || [],
         notes: invoiceData.notes || '',
-        // We let the database handle created_at/createdat default value
-        // but if we want to be safe and the column exists, we can provide it
-        // and we'll use a more standard naming if possible
       }
 
+      // If the table uses integer IDs, this will fail but the catch will retry without ID
       const { data, error } = await supabase
         .from('invoices')
         .insert([newInvoice])
         .select()
       
       if (error) {
-        // If it failed because 'id' is an integer, we should try without it
-        if (error.code === '22P02' || error.message.includes('invalid input syntax for type integer')) {
-           const { id, ...rest } = newInvoice
-           const { data: data2, error: error2 } = await supabase
-             .from('invoices')
-             .insert([rest])
-             .select()
-           if (error2) throw error2
-           return data2[0]
-        }
-        console.error('Error adding invoice:', error)
-        throw error
+        console.warn('Initial insert failed, retrying without preset ID...', error.message)
+        const { id, ...rest } = newInvoice
+        const { data: retryData, error: retryError } = await supabase
+          .from('invoices')
+          .insert([rest])
+          .select()
+        
+        if (retryError) throw retryError
+        return retryData[0]
       }
-      return (data && data.length > 0) ? data[0] : true
+      
+      return data?.[0] || true
     } catch (error) {
-      console.error('Detailed error in addInvoice:', error)
+      console.error('Final failure in addInvoice:', error)
       return null
+    } finally {
+      setIsWorking(false)
     }
   }
 
@@ -351,7 +340,7 @@ export function ShopProvider({ children }) {
   return (
     <ShopContext.Provider value={{
       sales, addSale, updateSale, deleteSale, getStats,
-      invoices, addInvoice, deleteInvoice, loading
+      invoices, addInvoice, deleteInvoice, loading, isWorking
     }}>
       {children}
     </ShopContext.Provider>

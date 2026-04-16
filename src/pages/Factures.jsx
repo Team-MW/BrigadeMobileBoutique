@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Plus, Search, FileText, Trash2, Printer, X, Download, Eye } from 'lucide-react'
 
 export default function Factures() {
-  const { invoices, addInvoice, deleteInvoice } = useShop()
+  const { invoices, addInvoice, deleteInvoice, isWorking } = useShop()
   const [search, setSearch] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [previewInvoice, setPreviewInvoice] = useState(null)
@@ -76,7 +76,18 @@ export default function Factures() {
   }
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen overflow-y-auto">
+    <div className="flex-1 flex flex-col min-h-screen relative overflow-hidden">
+      {/* Global Loading Overlay */}
+      {isWorking && (
+        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-background/40 backdrop-blur-[2px] transition-all duration-300">
+          <div className="bg-card/80 p-6 rounded-2xl border border-border/50 shadow-2xl flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-300">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-sm font-bold tracking-tight animate-pulse">Traitement en cours...</p>
+          </div>
+        </div>
+      )}
+
+      <div className="flex-1 flex flex-col min-h-screen overflow-y-auto">
       <Header title="Factures" subtitle={`${invoices.length} factures générées`} />
 
       <main className="flex-1 p-6 space-y-5 animate-fade-in print:hidden">
@@ -322,6 +333,7 @@ export default function Factures() {
           #invoice-print { position: absolute; left: 0; top: 0; width: 100%; border: none !important; }
         }
       `}</style>
+      </div>
     </div>
   )
 }

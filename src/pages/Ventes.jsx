@@ -58,7 +58,7 @@ const emptyForm = {
 }
 
 export default function Ventes() {
-  const { sales, addSale, updateSale, deleteSale, addInvoice, loading } = useShop()
+  const { sales, addSale, updateSale, deleteSale, addInvoice, loading, isWorking } = useShop()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
@@ -228,7 +228,18 @@ export default function Ventes() {
   }
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen overflow-y-auto">
+    <div className="flex-1 flex flex-col min-h-screen relative overflow-hidden">
+      {/* Global Loading Overlay */}
+      {isWorking && (
+        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-background/40 backdrop-blur-[2px] transition-all duration-300">
+          <div className="bg-card/80 p-6 rounded-2xl border border-border/50 shadow-2xl flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-300">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-sm font-bold tracking-tight animate-pulse">Traitement en cours...</p>
+          </div>
+        </div>
+      )}
+
+      <div className="flex-1 flex flex-col min-h-screen overflow-y-auto">
       <Header title="Suivi des Ventes" subtitle={`${sales.length} transactions enregistrées`} />
 
       {loading ? (
@@ -677,6 +688,7 @@ export default function Ventes() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   )
 }
