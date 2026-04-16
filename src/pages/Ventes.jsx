@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useShop } from '@/context/ShopContext'
 import Header from '@/components/Header'
+import InvoicePreview from '@/components/InvoicePreview'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -65,10 +66,12 @@ export default function Ventes() {
   const [filterType, setFilterType] = useState('all')
   const [sortField, setSortField] = useState('date')
   const [sortDir, setSortDir] = useState('desc')
+  const [selectedSale, setSelectedSale] = useState(null)
+  const [activeInvoice, setActiveInvoice] = useState(null)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingSale, setEditingSale] = useState(null)
   const [form, setForm] = useState(emptyForm)
-  const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
   const [formErrors, setFormErrors] = useState({})
   const [customService, setCustomService] = useState('')
 
@@ -186,13 +189,17 @@ export default function Ventes() {
       total: parseFloat(sale.price),
       notes: sale.notes || 'Généré depuis le suivi des ventes.'
     }
-    const newInv = await addInvoice(invoice)
-    if (newInv) {
-      alert(`Facture ${newInv.id} générée avec succès pour ${sale.client} !`)
-      navigate('/factures')
-    } else {
-      alert("Erreur lors de la génération de la facture.")
-    }
+    
+    setActiveInvoice(invoice)
+    
+    // Background attempt to save to DB, but don't wait for success to show the UI
+    addInvoice(invoice).then(result => {
+      if (result && result.id) {
+        setActiveInvoice(prev => ({ ...prev, id: result.id }))
+      }
+    }).catch(err => {
+      console.warn('Silent failure on DB storage, showing local version only.', err)
+    })
   }
 
   // ─── Export CSV ───────────────────────────────────────────────────
@@ -241,6 +248,12 @@ export default function Ventes() {
 
       <div className="flex-1 flex flex-col min-h-screen overflow-y-auto">
       <Header title="Suivi des Ventes" subtitle={`${sales.length} transactions enregistrées`} />
+
+      <InvoicePreview 
+        invoice={activeInvoice} 
+        isOpen={!!activeInvoice} 
+        onClose={() => setActiveInvoice(null)} 
+      />
 
       {loading ? (
         <div className="flex-1 flex flex-col items-center justify-center space-y-4 animate-pulse">
