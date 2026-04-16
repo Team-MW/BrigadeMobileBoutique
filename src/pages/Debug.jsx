@@ -8,6 +8,7 @@ export default function Debug() {
     key: 'Checking...',
     connection: 'Pending',
     tables: { sales: 'Pending', invoices: 'Pending' },
+    invoiceSchema: null,
     error: null
   })
 
@@ -18,6 +19,7 @@ export default function Debug() {
       
       let connection = 'Checking...'
       let tables = { sales: 'Pending', invoices: 'Pending' }
+      let invoiceSchema = null
       let error = null
 
       try {
@@ -31,12 +33,19 @@ export default function Debug() {
       }
 
       try {
-        const { error: invError } = await supabase.from('invoices').select('count', { count: 'exact', head: true })
-        if (!invError) tables.invoices = 'Found'
+        const { data: invData, error: invError } = await supabase.from('invoices').select('*').limit(1)
+        if (!invError) {
+          tables.invoices = 'Found'
+          if (invData && invData.length > 0) {
+            invoiceSchema = Object.keys(invData[0]).join(', ')
+          } else {
+            invoiceSchema = "No data to inspect columns"
+          }
+        }
         else tables.invoices = 'Error: ' + invError.message
       } catch (e) {}
 
-      setStatus({ url, key: key !== 'MISSING' ? 'Present (Hidden)' : 'MISSING', connection, tables, error })
+      setStatus({ url, key: key !== 'MISSING' ? 'Present (Hidden)' : 'MISSING', connection, tables, invoiceSchema, error })
     }
     check()
   }, [])
@@ -77,6 +86,11 @@ export default function Debug() {
             <span>Table `invoices`</span>
             <span className={status.tables.invoices === 'Found' ? 'text-green-400' : 'text-red-400'}>{status.tables.invoices}</span>
           </div>
+          {status.invoiceSchema && (
+            <div className="mt-2 p-2 bg-secondary/50 rounded text-[10px] font-mono break-all text-muted-foreground">
+              <span className="font-bold text-foreground">Colonnes détectées :</span> {status.invoiceSchema}
+            </div>
+          )}
         </div>
 
         {status.error && (

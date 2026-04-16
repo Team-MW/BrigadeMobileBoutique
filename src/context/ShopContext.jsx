@@ -219,36 +219,38 @@ export function ShopProvider({ children }) {
   const addInvoice = async (invoiceData) => {
     setIsWorking(true)
     try {
-      // Basic data
-      const total = parseFloat(invoiceData.total) || 0
-      const clientName = invoiceData.clientName || 'Sans nom'
-      
-      // Attempt 1: Standard lowercase (most likely)
-      const attempt1 = {
-        clientname: clientName,
-        clientphone: invoiceData.clientPhone || '',
-        clientaddress: invoiceData.clientAddress || '',
-        total: total,
-        items: invoiceData.items || [],
-        notes: invoiceData.notes || '',
-      }
-
-      const { data, error } = await supabase.from('invoices').insert([attempt1]).select()
+      // Very simple insert with most likely column names
+      const { data, error } = await supabase
+        .from('invoices')
+        .insert([{
+          clientname: invoiceData.clientName || 'Client',
+          clientphone: invoiceData.clientPhone || '',
+          clientaddress: invoiceData.clientAddress || '',
+          total: parseFloat(invoiceData.total) || 0,
+          items: invoiceData.items || [],
+          notes: invoiceData.notes || '',
+          id: `FAC-${Date.now().toString().slice(-6)}` // Simple unique string ID
+        }])
+        .select()
       
       if (error) {
-        console.warn('Standard insert failed, trying minimal...', error.message)
-        // Attempt 2: Minimal columns
-        const { data: data2, error: error2 } = await supabase.from('invoices').insert([{
-            clientname: clientName,
-            total: total
-        }]).select()
+        // Simple fallback if ID was the issue
+        const { data: data2, error: error2 } = await supabase
+          .from('invoices')
+          .insert([{
+            clientname: invoiceData.clientName || 'Client',
+            total: parseFloat(invoiceData.total) || 0,
+            items: invoiceData.items || []
+          }])
+          .select()
         
         if (error2) throw error2
         return data2?.[0] || true
       }
+      
       return data?.[0] || true
     } catch (error) {
-      console.error('Final Invoice Error:', error)
+      console.error('Invoice creation error:', error)
       return null
     } finally {
       setIsWorking(false)
