@@ -166,7 +166,7 @@ export default function Ventes() {
 
   const handleDelete = async (id) => {
     await deleteSale(id)
-    setDeleteConfirm(null)
+    setConfirmDeleteId(null)
   }
 
   const handleChange = (field, value) => {
@@ -451,7 +451,7 @@ export default function Ventes() {
                               <Edit className="w-3.5 h-3.5" />
                             </button>
                             <button
-                              onClick={() => setDeleteConfirm(sale.id)}
+                              onClick={() => setConfirmDeleteId(sale.id)}
                               className="p-1.5 rounded-md hover:bg-red-500/20 text-muted-foreground hover:text-red-400 transition-colors"
                               title="Supprimer"
                             >
@@ -679,7 +679,7 @@ export default function Ventes() {
       </Dialog>
 
       {/* Delete Confirm Dialog */}
-      <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
+      <Dialog open={!!confirmDeleteId} onOpenChange={() => setConfirmDeleteId(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-red-400">
@@ -691,10 +691,10 @@ export default function Ventes() {
             Êtes-vous sûr de vouloir supprimer cette vente ? Cette action est irréversible.
           </p>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setDeleteConfirm(null)}>
+            <Button variant="outline" onClick={() => setConfirmDeleteId(null)}>
               Annuler
             </Button>
-            <Button variant="destructive" onClick={() => handleDelete(deleteConfirm)} className="gap-2">
+            <Button variant="destructive" onClick={() => handleDelete(confirmDeleteId)} className="gap-2">
               <Trash2 className="w-4 h-4" />
               Supprimer
             </Button>
