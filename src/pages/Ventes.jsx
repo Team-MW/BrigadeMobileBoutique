@@ -76,8 +76,21 @@ export default function Ventes() {
   const filtered = sales
     .filter(s => {
       const q = search.toLowerCase()
-      const matchSearch = !q || [s.client, s.phone, s.service, s.status, s.type, s.clientPhone || '']
-        .some(v => v.toLowerCase().includes(q))
+      const searchFields = [
+        s.client, 
+        s.phone, 
+        s.service, 
+        s.status, 
+      
+      const matchSearch = !q || [
+        s.client || '', 
+        s.phone || '', 
+        s.service || '', 
+        s.status || '', 
+        s.type || '', 
+        s.clientPhone || '',
+        s.email || ''
+      ].some(v => v.toLowerCase().includes(q))
       const matchStatus = filterStatus === 'all' || s.status === filterStatus
       const matchType = filterType === 'all' || s.type === filterType
       return matchSearch && matchStatus && matchType
@@ -132,7 +145,7 @@ export default function Ventes() {
     return errors
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     const errors = validateForm()
     if (Object.keys(errors).length > 0) { setFormErrors(errors); return }
@@ -141,15 +154,20 @@ export default function Ventes() {
     const saleData = { ...form, service: finalService }
     
     if (editingSale) {
-      updateSale(editingSale, saleData)
+      await updateSale(editingSale, saleData)
+      setDialogOpen(false)
     } else {
-      addSale(saleData)
+      const result = await addSale(saleData)
+      if (result) {
+        setDialogOpen(false)
+      } else {
+        alert("Erreur lors de l'enregistrement de la vente. Veuillez vérifier votre connexion.")
+      }
     }
-    setDialogOpen(false)
   }
 
-  const handleDelete = (id) => {
-    deleteSale(id)
+  const handleDelete = async (id) => {
+    await deleteSale(id)
     setDeleteConfirm(null)
   }
 
@@ -158,7 +176,7 @@ export default function Ventes() {
     if (formErrors[field]) setFormErrors(prev => ({ ...prev, [field]: '' }))
   }
 
-  const handleGenerateInvoice = (sale) => {
+  const handleGenerateInvoice = async (sale) => {
     const invoice = {
       clientName: sale.client,
       clientPhone: sale.clientPhone || '',
@@ -173,9 +191,13 @@ export default function Ventes() {
       total: parseFloat(sale.price),
       notes: sale.notes || 'Généré depuis le suivi des ventes.'
     }
-    const newInv = addInvoice(invoice)
-    alert(`Facture ${newInv.id} générée avec succès pour ${sale.client} !`)
-    navigate('/factures')
+    const newInv = await addInvoice(invoice)
+    if (newInv) {
+      alert(`Facture ${newInv.id} générée avec succès pour ${sale.client} !`)
+      navigate('/factures')
+    } else {
+      alert("Erreur lors de la génération de la facture.")
+    }
   }
 
   // ─── Export CSV ───────────────────────────────────────────────────
@@ -352,7 +374,10 @@ export default function Ventes() {
                         <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                           {new Date(sale.date).toLocaleDateString('fr-FR')}
                         </TableCell>
-                        <TableCell className="font-medium text-foreground">{sale.client}</TableCell>
+                        <TableCell className="font-medium text-foreground">
+                          <div>{sale.client}</div>
+                          {sale.email && <div className="text-[10px] text-muted-foreground font-normal">{sale.email}</div>}
+                        </TableCell>
                         <TableCell className="text-sm text-muted-foreground">{sale.phone}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1.5">
@@ -491,6 +516,17 @@ export default function Ventes() {
                   onChange={e => handleChange('clientPhone', e.target.value)}
                 />
               </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="email">Email client</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="Ex: client@exemple.com"
+                value={form.email || ''}
+                onChange={e => handleChange('email', e.target.value)}
+              />
             </div>
 
             {/* Price Selection / Device Info */}

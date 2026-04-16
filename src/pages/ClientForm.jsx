@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useShop } from '@/context/ShopContext'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -27,6 +27,25 @@ export default function ClientForm() {
   const { addSale } = useShop()
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [countdown, setCountdown] = useState(10)
+  
+  useEffect(() => {
+    let timer;
+    let interval;
+    if (submitted) {
+      setCountdown(10);
+      interval = setInterval(() => {
+        setCountdown(prev => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+      timer = setTimeout(() => {
+        reset();
+      }, 10000);
+    }
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
+  }, [submitted]);
   
   const [form, setForm] = useState({
     client: '',
@@ -34,6 +53,7 @@ export default function ClientForm() {
     phone: '',
     service: '',
     secondaryService: '',
+    email: '',
     paymentPreference: 'Espèces',
     price: '0',
     notes: '',
@@ -64,7 +84,7 @@ export default function ClientForm() {
 
     const finalService = form.service === 'Autre / Diagnostic' ? form.secondaryService : form.service
     
-    await addSale({
+    const result = await addSale({
       ...form,
       service: finalService || 'Diagnostic à faire',
       clientPhone: form.clientPhone,
@@ -78,7 +98,11 @@ export default function ClientForm() {
     })
 
     setLoading(false)
-    setSubmitted(true)
+    if (result) {
+      setSubmitted(true)
+    } else {
+      alert("Erreur lors de l'enregistrement. Veuillez réessayer ou contacter le magasin.")
+    }
   }
 
   const reset = () => {
@@ -98,8 +122,12 @@ export default function ClientForm() {
             <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">Merci !</h2>
             <p className="text-lg text-gray-500">Votre demande a été enregistrée. Un technicien va s'occuper de vous.</p>
           </div>
-          <Button onClick={reset} size="lg" variant="outline" className="w-full h-14 rounded-2xl text-lg font-bold border-2 border-gray-100 hover:bg-gray-50">
-            Retour au formulaire
+          <Button 
+            onClick={reset} 
+            size="lg" 
+            className="w-full h-16 rounded-3xl text-xl font-extrabold bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-xl shadow-green-200 border-none transition-all active:scale-[0.98] animate-pulse-slow"
+          >
+            Retour au formulaire ({countdown}s)
           </Button>
         </div>
       </div>
@@ -153,6 +181,17 @@ export default function ClientForm() {
                     className={`h-14 rounded-2xl bg-gray-50 border-gray-100 text-lg text-gray-900 focus:ring-blue-500 ${errors.clientPhone ? 'border-red-500' : ''}`}
                   />
                   {errors.clientPhone && <p className="text-xs text-red-500 font-bold">{errors.clientPhone}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-bold text-gray-700">Adresse Email (Optionnel)</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="exemple@mail.com"
+                    value={form.email}
+                    onChange={e => setForm({...form, email: e.target.value})}
+                    className="h-14 rounded-2xl bg-gray-50 border-gray-100 text-lg text-gray-900 focus:ring-blue-500"
+                  />
                 </div>
               </CardContent>
             </Card>

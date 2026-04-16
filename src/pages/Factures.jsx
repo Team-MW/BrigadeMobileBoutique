@@ -48,18 +48,23 @@ export default function Factures() {
     setForm(prev => ({ ...prev, items: newItems }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    const total = form.items.reduce((sum, item) => sum + (item.quantity * item.price), 0)
-    addInvoice({ ...form, total })
-    setDialogOpen(false)
-    setForm({
-      clientName: '',
-      clientAddress: '',
-      clientPhone: '',
-      items: [{ description: '', quantity: 1, price: 0 }],
-      notes: ''
-    })
+    const total = form.items.reduce((sum, item) => sum + (item.quantity * parseFloat(item.price || 0)), 0)
+    const result = await addInvoice({ ...form, total })
+    
+    if (result) {
+      setDialogOpen(false)
+      setForm({
+        clientName: '',
+        clientAddress: '',
+        clientPhone: '',
+        items: [{ description: '', quantity: 1, price: 0 }],
+        notes: ''
+      })
+    } else {
+      alert("Erreur lors de la création de la facture.")
+    }
   }
 
   const calculateTotal = () => {
