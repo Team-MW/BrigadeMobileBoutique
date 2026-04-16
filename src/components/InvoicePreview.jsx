@@ -10,6 +10,25 @@ export default function InvoicePreview({ invoice, isOpen, onClose }) {
     window.print()
   }
 
+  const handleDownloadPDF = () => {
+    const element = document.getElementById('invoice-print')
+    const opt = {
+      margin: 0,
+      filename: `Facture_${invoice.id || 'PROVISOIRE'}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }
+    
+    // @ts-ignore
+    if (window.html2pdf) {
+      // @ts-ignore
+      window.html2pdf().set(opt).from(element).save()
+    } else {
+      handlePrint() // Fallback to print if library not loaded
+    }
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl p-0 overflow-hidden bg-white text-black">
@@ -109,7 +128,7 @@ export default function InvoicePreview({ invoice, isOpen, onClose }) {
               <Printer className="w-4 h-4 mr-2" />
               Imprimer
             </Button>
-            <Button onClick={handlePrint} className="bg-black hover:bg-black/90">
+            <Button onClick={handleDownloadPDF} className="bg-black hover:bg-black/90">
                <Download className="w-4 h-4 mr-2" />
                Télécharger PDF
             </Button>
