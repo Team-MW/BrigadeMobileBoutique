@@ -40,6 +40,7 @@ export default function ClientForm() {
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [countdown, setCountdown] = useState(10)
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   
   useEffect(() => {
     let timer;
@@ -82,6 +83,7 @@ export default function ClientForm() {
     if (!form.clientPhone.trim()) e.clientPhone = 'Votre numéro est requis'
     if (!form.phone.trim()) e.phone = 'Le modèle est requis'
     if (!form.service) e.service = 'Choisissez le type de panne'
+    if (!acceptedTerms) e.acceptedTerms = 'Veuillez accepter les conditions'
     return e
   }
 
@@ -121,6 +123,7 @@ export default function ClientForm() {
   const reset = () => {
     setForm({ client: '', clientPhone: '', phone: '', imei: '', unlockCode: '', service: '', paymentPreference: 'Espèces', notes: '', price: '0', acompte: '0' })
     setErrors({})
+    setAcceptedTerms(false)
     setSubmitted(false)
   }
 
@@ -356,16 +359,48 @@ export default function ClientForm() {
               </CardContent>
             </Card>
 
-          <div className="pt-4 space-y-4">
+          <div className="pt-4 space-y-6">
+            <div className={`p-6 rounded-3xl border-2 transition-all ${acceptedTerms ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-100 shadow-sm'}`}>
+              <div className="flex items-start gap-4">
+                <div className="pt-1">
+                  <input
+                    id="terms"
+                    type="checkbox"
+                    checked={acceptedTerms}
+                    onChange={e => setAcceptedTerms(e.target.checked)}
+                    className="w-6 h-6 rounded-lg text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="terms" className="text-sm font-bold text-gray-900 cursor-pointer">
+                    J'accepte les conditions générales & marketing
+                  </Label>
+                  <p className="text-[11px] text-gray-500 leading-relaxed">
+                    En cochant cette case, j'accepte les conditions de réparation de Brigade Mobile. 
+                    <span className="block mt-1 font-medium text-blue-600">
+                      Mes données personnelles sont protégées et ne seront jamais vendues à des tiers.
+                    </span>
+                    J'accepte que mon numéro soit utilisé pour le suivi de ma réparation et pour recevoir occasionnellement des offres promotionnelles par SMS.
+                  </p>
+                  {errors.acceptedTerms && <p className="text-xs text-red-500 font-bold animate-bounce mt-2">{errors.acceptedTerms}</p>}
+                </div>
+              </div>
+            </div>
+
             <Button 
               type="submit" 
-              className="w-full h-16 rounded-3xl text-xl font-black bg-blue-600 hover:bg-blue-700 text-white shadow-2xl shadow-blue-200 transition-all active:scale-[0.97]"
-              disabled={loading}
+              className={`w-full h-18 py-5 rounded-3xl text-xl font-black transition-all active:scale-[0.97] ${
+                acceptedTerms 
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-2xl shadow-blue-200' 
+                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              }`}
+              disabled={loading || !acceptedTerms}
             >
-              {loading ? 'Traitement...' : 'Déposer mon appareil'}
+              {loading ? 'Traitement en cours...' : 'Déposer mon appareil'}
             </Button>
+            
             <p className="text-center text-[10px] text-gray-400 uppercase font-bold tracking-widest px-8">
-              En déposant votre appareil, vous acceptez nos conditions générales de réparation.
+              Service de maintenance certifié par Brigade Mobile
             </p>
           </div>
 
