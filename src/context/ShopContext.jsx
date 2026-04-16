@@ -29,20 +29,24 @@ export function ShopProvider({ children }) {
       }))
       setSales(mappedSales)
 
-      const { data: invoicesData, error: invoicesError } = await supabase
+      const prevInvoices = await supabase
         .from('invoices')
         .select('*')
-        .order('createdat', { ascending: false })
       
-      if (invoicesError) throw invoicesError
-      const mappedInvoices = (invoicesData || []).map(inv => ({
+      const invoicesData = prevInvoices.data || []
+      const invoicesError = prevInvoices.error
+      
+      if (invoicesError) console.error('Error fetching invoices:', invoicesError)
+      
+      const mappedInvoices = invoicesData.map(inv => ({
         ...inv,
         total: Number(inv.total) || 0,
         clientName: inv.clientname,
         clientPhone: inv.clientphone,
         clientAddress: inv.clientaddress,
-        createdAt: inv.createdat || inv.inserted_at
-      }))
+        createdAt: inv.createdat || inv.inserted_at || inv.created_at || new Date().toISOString()
+      })).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+
       setInvoices(mappedInvoices)
     } catch (error) {
       console.error('Error fetching data:', error.message)
@@ -206,24 +210,22 @@ export function ShopProvider({ children }) {
 
   const addInvoice = async (invoiceData) => {
     try {
-      // Fetch the latest invoice to get a proper sequential ID
+      // Fetch the latest invoices to get a proper sequential ID
+      // We try to order by createdat, but fallback to id if it fails
       const { data: lastInvoices, error: fetchError } = await supabase
         .from('invoices')
         .select('id')
-        .order('createdat', { ascending: false })
+        .order('id', { ascending: false })
         .limit(1)
 
-      let nextIndex = 1
+      let nextIndex = (invoices && invoices.length > 0) ? invoices.length + 1 : 1
+      
       if (lastInvoices && lastInvoices.length > 0) {
-        const lastId = lastInvoices[0].id
+        const lastId = String(lastInvoices[0].id)
         const match = lastId.match(/-(\d+)$/)
         if (match) {
           nextIndex = parseInt(match[1]) + 1
-        } else {
-          nextIndex = invoices.length + 1
         }
-      } else {
-        nextIndex = invoices.length + 1
       }
       
       const invoiceSlug = `FAC-${new Date().getFullYear()}-${String(nextIndex).padStart(4, '0')}`
@@ -236,7 +238,9 @@ export function ShopProvider({ children }) {
         total: parseFloat(invoiceData.total) || 0,
         items: invoiceData.items || [],
         notes: invoiceData.notes || '',
-        createdat: new Date().toISOString(),
+        // We let the database handle created_at/createdat default value
+        // but if we want to be safe and the column exists, we can provide it
+        // and we'll use a more standard naming if possible
       }
 
       const { data, error } = await supabase
@@ -245,10 +249,20 @@ export function ShopProvider({ children }) {
         .select()
       
       if (error) {
+        // If it failed because 'id' is an integer, we should try without it
+        if (error.code === '22P02' || error.message.includes('invalid input syntax for type integer')) {
+           const { id, ...rest } = newInvoice
+           const { data: data2, error: error2 } = await supabase
+             .from('invoices')
+             .insert([rest])
+             .select()
+           if (error2) throw error2
+           return data2[0]
+        }
         console.error('Error adding invoice:', error)
         throw error
       }
-      return data[0]
+      return (data && data.length > 0) ? data[0] : true
     } catch (error) {
       console.error('Detailed error in addInvoice:', error)
       return null
