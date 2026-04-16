@@ -26,7 +26,9 @@ export function ShopProvider({ children }) {
         profit: Number(s.profit) || 0,
         clientPhone: s.clientphone,
         paymentMethod: s.paymentmethod,
-        email: s.email
+        email: s.email,
+        imei: s.imei,
+        acompte: Number(s.acompte) || 0
       }))
       setSales(mappedSales)
 
@@ -73,7 +75,9 @@ export function ShopProvider({ children }) {
             profit: Number(s.profit) || 0,
             clientPhone: s.clientphone, 
             paymentMethod: s.paymentmethod, 
-            email: s.email 
+            email: s.email,
+            imei: s.imei,
+            acompte: Number(s.acompte) || 0
           }
           setSales(prev => [mapped, ...prev])
         } else if (payload.eventType === 'UPDATE') {
@@ -85,7 +89,9 @@ export function ShopProvider({ children }) {
             profit: Number(s.profit) || 0,
             clientPhone: s.clientphone, 
             paymentMethod: s.paymentmethod, 
-            email: s.email 
+            email: s.email,
+            imei: s.imei,
+            acompte: Number(s.acompte) || 0
           }
           setSales(prev => prev.map(item => item.id === s.id ? mapped : item))
         } else if (payload.eventType === 'DELETE') {
@@ -146,6 +152,8 @@ export function ShopProvider({ children }) {
         status: sale.status || 'En attente',
         paymentmethod: sale.paymentMethod || sale.paymentPreference || 'Espèces',
         notes: sale.notes,
+        imei: sale.imei,
+        acompte: parseFloat(sale.acompte) || 0,
         date: sale.date || new Date().toISOString().split('T')[0],
         profit: (parseFloat(sale.price) || 0) - (parseFloat(sale.cost) || 0)
       }
@@ -239,6 +247,7 @@ export function ShopProvider({ children }) {
         clientname: clientName,
         clientphone: invoiceData.clientPhone || '',
         clientaddress: invoiceData.clientAddress || '',
+        imei: invoiceData.imei || '',
         total: total,
         items: invoiceData.items || [],
         notes: invoiceData.notes || ''

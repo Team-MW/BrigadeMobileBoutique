@@ -28,7 +28,8 @@ const SERVICES = [
   'Remplacement écran',
   'Remplacement batterie',
   'Réparation connecteur de charge',
-  'Réparation caméra',
+  'Caméra arrière',
+  'Caméra avant',
   'Réparation micro/haut-parleur',
   'Déverrouillage téléphone',
   'Remplacement vitre arrière',
@@ -38,6 +39,17 @@ const SERVICES = [
   'Chargeur',
   'Écouteurs',
   'Autre',
+]
+
+const MODELS = [
+  'iPhone 15 Pro Max', 'iPhone 15 Pro', 'iPhone 15 Plus', 'iPhone 15',
+  'iPhone 14 Pro Max', 'iPhone 14 Pro', 'iPhone 14 Plus', 'iPhone 14',
+  'iPhone 13 Pro Max', 'iPhone 13 Pro', 'iPhone 13 mini', 'iPhone 13',
+  'iPhone 12 Pro Max', 'iPhone 12 Pro', 'iPhone 12 mini', 'iPhone 12',
+  'iPhone 11 Pro Max', 'iPhone 11 Pro', 'iPhone 11',
+  'iPhone XR', 'iPhone XS Max', 'iPhone XS', 'iPhone X',
+  'iPhone 8 Plus', 'iPhone 8', 'iPhone 7 Plus', 'iPhone 7',
+  'iPhone 6S', 'iPhone 6', 'AirPods Pro', 'AirPods', 'iPad Air', 'iPad Pro'
 ]
 
 const PAYMENT_METHODS = ['Espèces', 'Carte', 'Virement', 'Chèque']
@@ -56,6 +68,7 @@ const emptyForm = {
   status: 'Terminé',
   clientPhone: '',
   notes: '',
+  imei: '',
 }
 
 export default function Ventes() {
@@ -149,7 +162,7 @@ export default function Ventes() {
     if (Object.keys(errors).length > 0) { setFormErrors(errors); return }
     
     const finalService = form.service === 'Autre' ? customService : form.service
-    const saleData = { ...form, service: finalService }
+    const saleData = { ...form, service: finalService, imei: form.imei }
     
     if (editingSale) {
       await updateSale(editingSale, saleData)
@@ -179,9 +192,11 @@ export default function Ventes() {
       clientName: sale.client,
       clientPhone: sale.clientPhone || '',
       clientAddress: '',
+      imei: sale.imei || '',
+      acompte: parseFloat(sale.acompte || 0),
       items: [
         { 
-          description: `${sale.type}: ${sale.service} - ${sale.phone}`, 
+          description: `${sale.type}: ${sale.service} - ${sale.phone}${sale.imei ? ' (IMEI: ' + sale.imei + ')' : ''}`, 
           quantity: 1, 
           price: parseFloat(sale.price) 
         }
@@ -204,16 +219,18 @@ export default function Ventes() {
 
   // ─── Export CSV ───────────────────────────────────────────────────
   const exportExcel = () => {
-    const headers = ['ID', 'Date', 'Client', 'Contact (Tel)', 'Appareil', 'Type', 'Service', 'Prix (€)', 'Coût (€)', 'Bénéfice (€)', 'Paiement', 'Statut']
+    const headers = ['ID', 'Date', 'Client', 'Contact (Tel)', 'IMEI', 'Appareil', 'Type', 'Service', 'Total (€)', 'Acompte (€)', 'Coût (€)', 'Bénéfice (€)', 'Paiement', 'Statut']
     const rows = filtered.map(s => [
       s.id,
       new Date(s.date).toLocaleDateString('fr-FR'),
       s.client,
       s.clientPhone || '-',
+      s.imei || '-',
       s.phone,
       s.type,
       s.service,
       (parseFloat(s.price) || 0).toFixed(2),
+      (parseFloat(s.acompte) || 0).toFixed(2),
       (parseFloat(s.cost) || 0).toFixed(2),
       (parseFloat(s.profit) || 0).toFixed(2),
       s.paymentMethod,
@@ -388,7 +405,10 @@ export default function Ventes() {
                           <div>{sale.client}</div>
                           {sale.email && <div className="text-[10px] text-muted-foreground font-normal">{sale.email}</div>}
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{sale.phone}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          <div>{sale.phone}</div>
+                          {sale.imei && <div className="text-[10px] text-primary/70 font-mono">IMEI: {sale.imei}</div>}
+                        </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1.5">
                             {sale.type === 'Réparation'
@@ -402,7 +422,10 @@ export default function Ventes() {
                           {sale.service}
                         </TableCell>
                         <TableCell className="font-semibold text-foreground">
-                          {parseFloat(sale.price).toFixed(2)} €
+                          <div>{parseFloat(sale.price).toFixed(2)} €</div>
+                          {(parseFloat(sale.price) - parseFloat(sale.acompte || 0)) > 0 && (
+                            <div className="text-[10px] text-orange-400">Reste: {(parseFloat(sale.price) - parseFloat(sale.acompte || 0)).toFixed(2)} €</div>
+                          )}
                         </TableCell>
                         <TableCell className="font-semibold text-green-400">
                           +{parseFloat(sale.profit).toFixed(2)} €
@@ -546,11 +569,24 @@ export default function Ventes() {
                 <Input
                   id="phone"
                   placeholder="Ex: iPhone 13"
+                  list="ventes-models"
                   value={form.phone}
                   onChange={e => handleChange('phone', e.target.value)}
                   className={formErrors.phone ? 'border-red-500' : ''}
                 />
+                <datalist id="ventes-models">
+                  {MODELS.map(m => <option key={m} value={m} />)}
+                </datalist>
                 {formErrors.phone && <p className="text-xs text-red-400">{formErrors.phone}</p>}
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="imei">IMEI</Label>
+                <Input
+                  id="imei"
+                  placeholder="N° IMEI"
+                  value={form.imei || ''}
+                  onChange={e => handleChange('imei', e.target.value)}
+                />
               </div>
             </div>
 
@@ -604,6 +640,29 @@ export default function Ventes() {
                   value={form.cost}
                   onChange={e => handleChange('cost', e.target.value)}
                 />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="acompte">Acompte (€)</Label>
+                <Input
+                  id="acompte"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                  value={form.acompte || '0'}
+                  onChange={e => handleChange('acompte', e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5 flex flex-col justify-end">
+                <div className="p-2.5 rounded-lg bg-blue-900/20 border border-blue-800/30 text-xs flex justify-between items-center">
+                  <span className="text-muted-foreground">Reste :</span>
+                  <span className="font-bold text-blue-400">
+                    {((parseFloat(form.price) || 0) - (parseFloat(form.acompte) || 0)).toFixed(2)} €
+                  </span>
+                </div>
               </div>
             </div>
 

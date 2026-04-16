@@ -117,6 +117,7 @@ export default function InvoicePreview({ invoice, isOpen, onClose }) {
                   <p className="text-[10px] uppercase font-black text-blue-600 tracking-[0.2em] mb-2">Destinataire</p>
                   <p className="text-lg font-black uppercase tracking-tight">{invoice.clientName || 'CLIENT'}</p>
                   {invoice.clientPhone && <p className="text-sm font-semibold text-gray-600">Tél: {invoice.clientPhone}</p>}
+                  {invoice.imei && <p className="text-sm font-mono text-blue-600/80">IMEI: {invoice.imei}</p>}
                   {invoice.clientAddress && <p className="text-sm text-gray-500 mt-1">{invoice.clientAddress}</p>}
                 </div>
               </div>
@@ -178,6 +179,18 @@ export default function InvoicePreview({ invoice, isOpen, onClose }) {
                   <span className="text-sm font-black uppercase tracking-widest text-gray-400">Total TTC</span>
                   <span className="text-2xl font-black text-blue-600">{parseFloat(invoice.total || 0).toFixed(2)} €</span>
                 </div>
+                {invoice.acompte > 0 && (
+                  <>
+                    <div className="flex justify-between text-xs text-green-600 font-bold pt-2">
+                      <span>Acompte versé</span>
+                      <span>-{parseFloat(invoice.acompte).toFixed(2)} €</span>
+                    </div>
+                    <div className="flex justify-between text-sm font-black text-orange-600 pt-1 border-t border-gray-100">
+                      <span>SOLDE À PAYER</span>
+                      <span>{(parseFloat(invoice.total) - parseFloat(invoice.acompte)).toFixed(2)} €</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 

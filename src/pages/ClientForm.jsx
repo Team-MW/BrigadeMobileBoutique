@@ -10,11 +10,23 @@ const PANNES = [
   'Écran cassé',
   'Batterie HS',
   'Ne charge plus',
-  'Caméra défectueuse',
+  'Caméra Arrière',
+  'Caméra Avant',
   'Son / Micro',
   'Boutons',
   'Oxydation (Eau)',
   'Autre / Diagnostic',
+]
+
+const MODELS = [
+  'iPhone 15 Pro Max', 'iPhone 15 Pro', 'iPhone 15 Plus', 'iPhone 15',
+  'iPhone 14 Pro Max', 'iPhone 14 Pro', 'iPhone 14 Plus', 'iPhone 14',
+  'iPhone 13 Pro Max', 'iPhone 13 Pro', 'iPhone 13 mini', 'iPhone 13',
+  'iPhone 12 Pro Max', 'iPhone 12 Pro', 'iPhone 12 mini', 'iPhone 12',
+  'iPhone 11 Pro Max', 'iPhone 11 Pro', 'iPhone 11',
+  'iPhone XR', 'iPhone XS Max', 'iPhone XS', 'iPhone X',
+  'iPhone 8 Plus', 'iPhone 8', 'iPhone 7 Plus', 'iPhone 7',
+  'iPhone 6S', 'iPhone 6', 'AirPods Pro', 'AirPods', 'iPad Air', 'iPad Pro'
 ]
 
 const PAYMENTS = [
@@ -56,7 +68,9 @@ export default function ClientForm() {
     email: '',
     paymentPreference: 'Espèces',
     price: '0',
+    acompte: '0',
     notes: '',
+    imei: '',
   })
 
   const [errors, setErrors] = useState({})
@@ -104,7 +118,7 @@ export default function ClientForm() {
   }
 
   const reset = () => {
-    setForm({ client: '', clientPhone: '', phone: '', service: '', paymentPreference: 'Espèces', notes: '' })
+    setForm({ client: '', clientPhone: '', phone: '', imei: '', service: '', paymentPreference: 'Espèces', notes: '', price: '0', acompte: '0' })
     setErrors({})
     setSubmitted(false)
   }
@@ -208,11 +222,26 @@ export default function ClientForm() {
                   <Input
                     id="phone"
                     placeholder="Ex: iPhone 13 Pro, Samsung S22..."
+                    list="phone-models"
                     value={form.phone}
                     onChange={e => setForm({...form, phone: e.target.value})}
                     className={`h-14 rounded-2xl bg-gray-50 border-gray-100 text-lg text-gray-900 focus:ring-blue-500 ${errors.phone ? 'border-red-500' : ''}`}
                   />
+                  <datalist id="phone-models">
+                    {MODELS.map(m => <option key={m} value={m} />)}
+                  </datalist>
                   <p className="text-[10px] text-gray-400">Si vous ne savez pas, écrivez "Inconnu".</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="imei" className="text-sm font-bold text-gray-700">N° IMEI (Optionnel)</Label>
+                  <Input
+                    id="imei"
+                    placeholder="Tapez *#06# pour l'obtenir"
+                    value={form.imei}
+                    onChange={e => setForm({...form, imei: e.target.value})}
+                    className="h-14 rounded-2xl bg-gray-50 border-gray-100 text-lg text-gray-900 focus:ring-blue-500"
+                  />
+                  <p className="text-[10px] text-gray-400">Recommandé pour garantir la traçabilité de votre appareil.</p>
                 </div>
                 <div className="space-y-4">
                   <Label className="text-sm font-bold text-gray-700">Type de panne</Label>
@@ -274,28 +303,46 @@ export default function ClientForm() {
             </div>
           </div>
 
-          {/* Section 4: Prix */}
-          <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-bold text-blue-600 uppercase tracking-widest pl-1">
-              <Euro className="w-4 h-4" /> Prix Estimé / Acompte
+              <Euro className="w-4 h-4" /> Tarification
             </div>
             <Card className="border-0 shadow-sm rounded-3xl overflow-hidden bg-white">
               <CardContent className="p-6">
-                <div className="space-y-2">
-                  <Label htmlFor="price" className="text-sm font-bold text-gray-700">Montant (€)</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    placeholder="0.00"
-                    value={form.price}
-                    onChange={e => setForm({...form, price: e.target.value})}
-                    className="h-14 rounded-2xl bg-gray-50 border-gray-100 text-lg text-gray-900 focus:ring-blue-500"
-                  />
-                  <p className="text-[10px] text-gray-400 font-medium">Laissez à 0 si le prix n'est pas encore fixé.</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="price" className="text-sm font-bold text-gray-700">Prix Réparation (€)</Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      placeholder="0.00"
+                      value={form.price}
+                      onChange={e => setForm({...form, price: e.target.value})}
+                      className="h-14 rounded-2xl bg-gray-50 border-gray-100 text-lg text-gray-900 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="acompte" className="text-sm font-bold text-gray-700">Acompte versé (€)</Label>
+                    <Input
+                      id="acompte"
+                      type="number"
+                      placeholder="0.00"
+                      value={form.acompte}
+                      onChange={e => setForm({...form, acompte: e.target.value})}
+                      className="h-14 rounded-2xl bg-gray-50 border-gray-100 text-lg text-gray-900 focus:ring-blue-500"
+                    />
+                  </div>
                 </div>
+                {parseFloat(form.price) > 0 && (
+                  <div className="mt-4 p-4 rounded-2xl bg-blue-50 border border-blue-100 flex justify-between items-center">
+                    <span className="text-sm font-bold text-blue-800">Reste à payer :</span>
+                    <span className="text-xl font-black text-blue-900">
+                      {Math.max(0, (parseFloat(form.price) || 0) - (parseFloat(form.acompte) || 0)).toFixed(2)} €
+                    </span>
+                  </div>
+                )}
+                <p className="text-[10px] text-gray-400 font-medium mt-3">Indiquez le montant total et l'acompte si déjà réglé.</p>
               </CardContent>
             </Card>
-          </div>
 
           <div className="pt-4 space-y-4">
             <Button 
