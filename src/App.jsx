@@ -6,6 +6,8 @@ import Ventes from './pages/Ventes'
 import Factures from './pages/Factures'
 import ClientForm from './pages/ClientForm'
 import Debug from './pages/Debug'
+import GrilleTarifaire from './pages/GrilleTarifaire'
+import Organisation from './pages/Organisation'
 import './index.css'
 
 function Layout({ children }) {
@@ -13,7 +15,7 @@ function Layout({ children }) {
   const isClientMode = location.pathname === '/depot'
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-background pb-16 md:pb-0">
       {!isClientMode && <Sidebar />}
       <div className="flex-1 flex flex-col min-w-0">
         {children}
@@ -32,6 +34,8 @@ function App() {
             <Route path="/ventes" element={<Ventes />} />
             <Route path="/factures" element={<Factures />} />
             <Route path="/depot" element={<ClientForm />} />
+            <Route path="/tarifs" element={<GrilleTarifaire />} />
+            <Route path="/organisation" element={<Organisation />} />
             <Route path="/debug" element={<Debug />} />
           </Routes>
         </Layout>
