@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, ShoppingCart, Smartphone, TrendingUp, Settings, Menu, X, FileText, Tags, Kanban } from 'lucide-react'
+import { LayoutDashboard, ShoppingCart, Smartphone, TrendingUp, Settings, Menu, X, FileText, Tags, Kanban, Package } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -9,6 +9,7 @@ const navItems = [
   { to: '/factures', icon: FileText, label: 'Factures', shortLabel: 'Factures' },
   { to: '/tarifs', icon: Tags, label: 'Grille Tarifaire', shortLabel: 'Tarifs' },
   { to: '/organisation', icon: Kanban, label: 'Organisation', shortLabel: 'Tickets' },
+  { to: '/stock', icon: Package, label: 'Stock', shortLabel: 'Stock' },
 ]
 
 export default function Sidebar() {

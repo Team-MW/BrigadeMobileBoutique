@@ -76,3 +76,16 @@ CREATE POLICY "Autoriser tout sur sales" ON public.sales AS PERMISSIVE FOR ALL T
 CREATE POLICY "Autoriser tout sur invoices" ON public.invoices AS PERMISSIVE FOR ALL TO public USING (true) WITH CHECK (true);
 CREATE POLICY "Autoriser tout sur grille_tarifaire" ON public.grille_tarifaire AS PERMISSIVE FOR ALL TO public USING (true) WITH CHECK (true);
 CREATE POLICY "Autoriser tout sur repair_tickets" ON public.repair_tickets AS PERMISSIVE FOR ALL TO public USING (true) WITH CHECK (true);
+
+-- 5. Table de gestion de stock
+CREATE TABLE IF NOT EXISTS public.stock (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    name text NOT NULL,
+    category text,
+    quantity numeric DEFAULT 0,
+    price numeric DEFAULT 0,
+    created_at timestamp with time zone DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.stock ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Autoriser tout sur stock" ON public.stock AS PERMISSIVE FOR ALL TO public USING (true) WITH CHECK (true);

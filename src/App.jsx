@@ -8,6 +8,7 @@ import ClientForm from './pages/ClientForm'
 import Debug from './pages/Debug'
 import GrilleTarifaire from './pages/GrilleTarifaire'
 import Organisation from './pages/Organisation'
+import Stock from './pages/Stock'
 import './index.css'
 
 function Layout({ children }) {
@@ -36,6 +37,7 @@ function App() {
             <Route path="/depot" element={<ClientForm />} />
             <Route path="/tarifs" element={<GrilleTarifaire />} />
             <Route path="/organisation" element={<Organisation />} />
+            <Route path="/stock" element={<Stock />} />
             <Route path="/debug" element={<Debug />} />
           </Routes>
         </Layout>
