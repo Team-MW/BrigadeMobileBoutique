@@ -16,6 +16,16 @@ export default function Factures() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [previewInvoice, setPreviewInvoice] = useState(null)
   
+  const [invoiceType, setInvoiceType] = useState('standard') // 'standard' or 'phone'
+  const [phoneDetails, setPhoneDetails] = useState({
+    brand: 'Apple',
+    model: '',
+    imei: '',
+    condition: 'Reconditionné (Grade A)',
+    warranty: '6 mois',
+    price: 0,
+  })
+  
   const [form, setForm] = useState({
     clientName: '',
     clientAddress: '',
@@ -53,8 +63,18 @@ export default function Factures() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const total = form.items.reduce((sum, item) => sum + (item.quantity * parseFloat(item.price || 0)), 0)
-    const result = await addInvoice({ ...form, total })
+    
+    let itemsToSubmit = form.items
+    if (invoiceType === 'phone') {
+      itemsToSubmit = [{
+        description: `Téléphone: ${phoneDetails.brand} ${phoneDetails.model} | IMEI: ${phoneDetails.imei} | État: ${phoneDetails.condition} | Garantie: ${phoneDetails.warranty}`,
+        quantity: 1,
+        price: phoneDetails.price
+      }]
+    }
+
+    const total = itemsToSubmit.reduce((sum, item) => sum + (item.quantity * parseFloat(item.price || 0)), 0)
+    const result = await addInvoice({ ...form, items: itemsToSubmit, total })
     
     if (result) {
       setDialogOpen(false)
@@ -65,12 +85,23 @@ export default function Factures() {
         items: [{ description: '', quantity: 1, price: 0 }],
         notes: ''
       })
+      setPhoneDetails({
+        brand: 'Apple',
+        model: '',
+        imei: '',
+        condition: 'Reconditionné (Grade A)',
+        warranty: '6 mois',
+        price: 0,
+      })
     } else {
       alert("Erreur lors de la création de la facture.")
     }
   }
 
   const calculateTotal = () => {
+    if (invoiceType === 'phone') {
+      return parseFloat(phoneDetails.price || 0)
+    }
     return form.items.reduce((sum, item) => sum + (item.quantity * parseFloat(item.price || 0)), 0)
   }
 
@@ -159,10 +190,28 @@ export default function Factures() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Nouvelle Facture Manuelle</DialogTitle>
+            <DialogTitle>Créer une Facture</DialogTitle>
           </DialogHeader>
+
+          <div className="flex gap-2 p-1 bg-secondary/50 rounded-lg mb-2">
+            <button
+              type="button"
+              onClick={() => setInvoiceType('standard')}
+              className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${invoiceType === 'standard' ? 'bg-background shadow text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              Facture Standard
+            </button>
+            <button
+              type="button"
+              onClick={() => setInvoiceType('phone')}
+              className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${invoiceType === 'phone' ? 'bg-primary text-primary-foreground shadow' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              Vente Téléphone
+            </button>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Nom du Client</Label>
                 <Input required value={form.clientName} onChange={e => setForm({...form, clientName: e.target.value})} />
@@ -177,38 +226,105 @@ export default function Factures() {
               <Input value={form.clientAddress} onChange={e => setForm({...form, clientAddress: e.target.value})} />
             </div>
 
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <Label>Articles / Services</Label>
-                <Button type="button" variant="outline" size="sm" onClick={handleAddItem}>
-                  + Ajouter un article
-                </Button>
-              </div>
+            {invoiceType === 'standard' ? (
               <div className="space-y-2">
-                {form.items.map((item, index) => (
-                  <div key={index} className="flex gap-2 items-start">
-                    <div className="flex-1">
-                      <Input placeholder="Description" required value={item.description} onChange={e => handleItemChange(index, 'description', e.target.value)} />
+                <div className="flex justify-between items-center">
+                  <Label>Articles / Services</Label>
+                  <Button type="button" variant="outline" size="sm" onClick={handleAddItem}>
+                    + Ajouter un article
+                  </Button>
+                </div>
+                <div className="space-y-4 sm:space-y-2">
+                  {form.items.map((item, index) => (
+                    <div key={index} className="flex flex-col sm:flex-row gap-2 items-start p-3 sm:p-0 bg-background/50 sm:bg-transparent rounded-lg border sm:border-0">
+                      <div className="flex-1 w-full">
+                        <Input placeholder="Description" required value={item.description} onChange={e => handleItemChange(index, 'description', e.target.value)} />
+                      </div>
+                      <div className="flex w-full sm:w-auto gap-2">
+                        <div className="w-20">
+                          <Input type="number" placeholder="Qté" required min="1" value={item.quantity} onChange={e => handleItemChange(index, 'quantity', parseInt(e.target.value))} />
+                        </div>
+                        <div className="flex-1 sm:w-32">
+                          <Input type="number" placeholder="Prix" required step="0.01" value={item.price} onChange={e => handleItemChange(index, 'price', parseFloat(e.target.value))} />
+                        </div>
+                        <Button type="button" variant="ghost" size="icon" className="text-red-500 shrink-0" onClick={() => handleRemoveItem(index)} disabled={form.items.length === 1}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="w-20">
-                      <Input type="number" placeholder="Qté" required min="1" value={item.quantity} onChange={e => handleItemChange(index, 'quantity', parseInt(e.target.value))} />
-                    </div>
-                    <div className="w-32">
-                      <Input type="number" placeholder="Prix" required step="0.01" value={item.price} onChange={e => handleItemChange(index, 'price', parseFloat(e.target.value))} />
-                    </div>
-                    <Button type="button" variant="ghost" size="icon" className="text-red-500" onClick={() => handleRemoveItem(index)} disabled={form.items.length === 1}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="space-y-4 bg-primary/5 p-4 rounded-xl border border-primary/20 mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Marque</Label>
+                    <select 
+                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                      value={phoneDetails.brand}
+                      onChange={e => setPhoneDetails({...phoneDetails, brand: e.target.value})}
+                    >
+                      <option>Apple</option>
+                      <option>Samsung</option>
+                      <option>Xiaomi</option>
+                      <option>Oppo</option>
+                      <option>Google</option>
+                      <option>Huawei</option>
+                      <option>Autre</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Modèle (et capacité)</Label>
+                    <Input required value={phoneDetails.model} onChange={e => setPhoneDetails({...phoneDetails, model: e.target.value})} placeholder="ex: 13 Pro 128Go" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Numéro IMEI / Série</Label>
+                  <Input required value={phoneDetails.imei} onChange={e => setPhoneDetails({...phoneDetails, imei: e.target.value})} placeholder="352..." />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>État / Grade</Label>
+                    <select 
+                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                      value={phoneDetails.condition}
+                      onChange={e => setPhoneDetails({...phoneDetails, condition: e.target.value})}
+                    >
+                      <option>Neuf</option>
+                      <option>Reconditionné (Grade A+)</option>
+                      <option>Reconditionné (Grade A)</option>
+                      <option>Reconditionné (Grade B)</option>
+                      <option>Occasion</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Garantie</Label>
+                    <select 
+                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                      value={phoneDetails.warranty}
+                      onChange={e => setPhoneDetails({...phoneDetails, warranty: e.target.value})}
+                    >
+                      <option>Aucune</option>
+                      <option>3 mois</option>
+                      <option>6 mois</option>
+                      <option>1 an</option>
+                      <option>2 ans</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="space-y-2 pt-2 border-t border-primary/10">
+                  <Label className="text-primary font-bold">Prix de Vente TTC (€)</Label>
+                  <Input required type="number" step="0.01" value={phoneDetails.price} onChange={e => setPhoneDetails({...phoneDetails, price: parseFloat(e.target.value) || 0})} placeholder="0.00" className="text-lg font-bold text-primary" />
+                </div>
+              </div>
+            )}
 
-            <div className="pt-4 border-t border-border flex justify-between items-center">
+            <div className="pt-4 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4">
               <p className="text-lg font-bold">Total: {calculateTotal().toFixed(2)} €</p>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Annuler</Button>
-                <Button type="submit">Générer la Facture</Button>
+              <DialogFooter className="w-full sm:w-auto flex-col sm:flex-row gap-2">
+                <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setDialogOpen(false)}>Annuler</Button>
+                <Button type="submit" className="w-full sm:w-auto">Générer la Facture</Button>
               </DialogFooter>
             </div>
           </form>
