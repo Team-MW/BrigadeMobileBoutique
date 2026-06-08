@@ -7,7 +7,6 @@ const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Tableau de Bord', shortLabel: 'Accueil' },
   { to: '/ventes', icon: ShoppingCart, label: 'Suivi des Ventes', shortLabel: 'Ventes' },
   { to: '/factures', icon: FileText, label: 'Factures', shortLabel: 'Factures' },
-  { to: '/depot', icon: Smartphone, label: 'Dépôt Client', shortLabel: 'Dépôt' },
   { to: '/tarifs', icon: Tags, label: 'Grille Tarifaire', shortLabel: 'Tarifs' },
   { to: '/organisation', icon: Kanban, label: 'Organisation', shortLabel: 'Tickets' },
 ]
@@ -103,6 +102,26 @@ export default function Sidebar() {
             </NavLink>
           ))}
         </nav>
+
+        {/* Action Rapide */}
+        <div className="px-3 py-3 border-t border-sidebar-border/50">
+          <NavLink
+            to="/depot"
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group border",
+                collapsed && "justify-center px-2",
+                isActive
+                  ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20"
+                  : "border-primary/20 bg-primary/5 text-foreground hover:bg-primary/10 hover:border-primary/30"
+              )
+            }
+            title={collapsed ? "Dépôt Client" : undefined}
+          >
+            <Smartphone className={cn("flex-shrink-0", collapsed ? "w-5 h-5" : "w-4 h-4", "text-primary group-hover:scale-110 transition-transform")} />
+            {!collapsed && <span className="text-sm font-bold">Dépôt Client</span>}
+          </NavLink>
+        </div>
 
         {/* Footer */}
         {!collapsed && (

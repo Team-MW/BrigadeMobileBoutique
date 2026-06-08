@@ -9,8 +9,9 @@ import {
 } from 'recharts'
 import {
   TrendingUp, TrendingDown, Euro, Wrench, ShoppingBag,
-  CheckCircle, Clock, ArrowUpRight, Activity
+  CheckCircle, Clock, ArrowUpRight, Activity, Smartphone
 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4']
 
@@ -82,22 +83,33 @@ export default function Dashboard() {
       ) : (
         <main className="flex-1 p-6 space-y-6 animate-fade-in">
         
-        {/* Period Selector */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm text-muted-foreground">Période :</span>
-          {Object.entries(periodLabels).map(([key, label]) => (
-            <button
-              key={key}
-              onClick={() => setPeriod(key)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                period === key
-                  ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/30'
-                  : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+        {/* Action Bar (Period + Depot Client Button) */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          {/* Period Selector */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm text-muted-foreground">Période :</span>
+            {Object.entries(periodLabels).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setPeriod(key)}
+                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  period === key
+                    ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/30'
+                    : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-primary/30'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <Link
+            to="/depot"
+            className="flex items-center gap-2 px-6 py-2.5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/30 transition-all hover:scale-105 active:scale-95"
+          >
+            <Smartphone className="w-5 h-5" />
+            Nouveau Dépôt Client
+          </Link>
         </div>
 
         {/* KPI Cards */}
