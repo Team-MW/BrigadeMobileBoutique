@@ -2,10 +2,104 @@ import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Printer, Download, FileText, X } from 'lucide-react'
-import html2canvas from 'html2canvas'
+import html2canvas from 'html2canvas-pro'
 import { jsPDF } from 'jspdf'
 
-const LOGO_BASE64 = "data:image/png;base64,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"
+const LOGO_BASE64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJAAAACQCAYAAAD8G9IAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH6AQQEAsQCxa9LgAAD6ZJREFUeNrtnXeYFMXWx7+enp7+u1BSMtKC52e+qIf3vpfrB2XIaLc4VR0Hr+Ya4KVfh5Z9QdA488mTJ58bPHjwX+hzDJ2IriArmuGqPHfu3JqEhITJoeJXtBYLe7Hd9b4dVu9xg8UkZ7jLkNHWAuUZOVr4+GFToJQmBBkQg6K8vPzz5OTkB9pbTSFcdHqeOBKVmN3uW79+/W/tdntJqPgV3kTkKwXLwKczTaTJAGa49/QmAzJkdAWUSFR2DiZlqWHpNCPZFzQOI1pUYpzqwLp1656ku6EL0CVFLVS3ffr06WePHj06w+PxuMVrafYmUK0nk5aBL2eZILMvC44YbEUvQ0abXT8HDyMGqODzJ8wtFiijAYGun8vlsm3duvXRGTNm1GKcqqNq/1pCl66v0fyrwsLCxzMzM5cSjTchCB8yfoUa4Df/uY50WdGoo7OTiAwZ7QmFWEqT3puFjS9YIKOPkKEe4oVPCAm7KRcWFt4zfPjwvM5MU2gOXZ4MQG9ASUnJktTU1FktBdxpIHDzMS/85r068GF7J3xDyIQlQ0azQEJyeXjopWPg++csROM+jJ6V5Dk8ffr0ggEDBizsaqLqLmRFA+7q8vLy1YmJiZNbJCxRsmLtfjcJurNKJLDYlUWWISN0YxIeNPi8PGOBcYPDaixLnj+r1fp5v379aEBd2uinS9DlUR+8CfPnz8fr8GzdunUaBvJCFTwjSGNMDuA3V2rgH4+ZwOfliUa4rNIgQ0ZjFQVM+kQJprxZ5oiIqqamZvMzzzwzU9zX5UTVLcgKsXDhQk5MMKvetGnT/Q0NDeUY2AvWLBWBriDe+Luu0cAnj5pJh+dQVeIyZMQaUXlRZgkAVj5uhpuGq4UQSgiioit/Dofj+KpVq6bl5eU50ZDoqoB6U3SrR5v6xVu2bMkZOXLkt1qtVh+snRcFfVN89oMLHlpeDxodE+g8IkNGrBKVz8cD7wP4......[TRUNCATED]......lYgQ0ZjFQVM+kQJprxZ5oiIqqamZvMzzzwzU9zX5UTVLcgKsXDhQk5MMKvetGnT/Q0NDeUY2AvWLBWBriDe+Luu0cAnj5pJh+dQVeIyZMQaUXlRZgkAVj5uhpuGq4UQSgiioit/Dofj+KpVq6bl5eU50ZDoqoB6U3SrR5v6xVu2bMkZOXLkt1qtVh+snRcFfVN89oMLHlpeDxodE+g8IkNGrBKVz8cD7wP48gkT3H51i9nppJQGBTIbGhqq8/Pzb7zlllv2dXaGeo8iKwTNjC0oKLhz8ODBX6rVakVL1xogrB/d8NByO2i0MmHJiO0YFStaVL++Uh2O60cMAqfT6dy1a9dtOTk5G+lKPXQjdDuykhLWyZMnZ2ZmZn4orkKwwa6XdMsV3xxf7nLDg8vtoFABqFiGxLJkyIgVonJ7eVDjc/C4GW7NapmoUJoYFcc9Ho+/qKjo3qFDh37dHVb+egxZIegNKy4ufjE9PX2xGPhThLSwRMJavdcN9y+zA4eNOlVyHpaM2BDPc7p4MKkB8p6ywIQhYQXTSeDc7/ezp06dmnHppZeu6Iqavx5PVk0I69X09PSXwiIscYDWH/bA3Utt0OAF0Glk8T4Z0QulAqDeyUOSiYGvnzKTkrRwiIrneZKhXl5e/nRycvL/dmei6glkhdeHqxH+0tLSPOfrvXWvD3bYmTDpWVltVEaUdqPh4dIkFlbNNsOw5LASPgNEVURJui8lPz+JH5L+NYkvEleSrkXo30o6SRdJ5GekG4b0LSRNlHSR3BfDkP41iS8SjxgQ73vGDSQj8Z4Mku4/k+wJfCTuY4Qk/yHp/pNkUXSRdJF0kQZJ959J9kTSRX6SPVFCZ0kK6V+R7In3J/FCZFJ0kQZJFxka4aGXD0eE9C0kSZZEX7/XwUN6w7rS9XQeNuhxAwZkSH/dt5A0UdJF958MSXf/yUi6/2RIvEdy/0l8/UhG0t3TjKTX40n/f0n3nwyS7j8Z/t1/Mv9f958Mkp+f5BfJ/SfZ/yR7Iukiv552/3qS4f/nJ/HukXT3/xP3LSRddG+S7v5/0kXS/SfpokjSRXeTdP/J/X/S/e/J/Sf3n0R+kh9d+p0Mkp+f5P7T/Sfxd/9JfP1IRv86O+Tfp91/ujf5yZP1P119mHqP/o+G/wU0QhQh0D02gAAAAABJRU5ErkJggg==".replace(/\s/g, '');
+
+// A robust helper to run html2canvas safely by temporarily cleaning oklch/oklab styles from the page's stylesheets
+const callHtml2CanvasSafely = async (element, options = {}) => {
+  const styleTags = Array.from(document.querySelectorAll('style'));
+  const linkTags = Array.from(document.querySelectorAll('link[rel="stylesheet"]'));
+  const tempStyleTags = [];
+  const originalAdopted = document.adoptedStyleSheets;
+
+  try {
+    // 1. Temporarily clear adoptedStyleSheets to prevent html2canvas parsing errors
+    if (originalAdopted && originalAdopted.length > 0) {
+      document.adoptedStyleSheets = [];
+    }
+
+    // Helper to extract, sanitize, and override styles
+    const processStylesheet = (sheetOwner, cssRules) => {
+      try {
+        let cssText = '';
+        if (cssRules) {
+          cssText = Array.from(cssRules).map(rule => rule.cssText).join('\n');
+        } else {
+          cssText = sheetOwner.innerHTML || '';
+        }
+
+        if (cssText.includes('oklch') || cssText.includes('oklab')) {
+          const sanitizedCSS = cssText
+            .replace(/oklch\([^)]+\)/g, '#000000')
+            .replace(/oklab\([^)]+\)/g, '#000000');
+          
+          const tempStyle = document.createElement('style');
+          tempStyle.innerHTML = sanitizedCSS;
+          document.head.appendChild(tempStyle);
+          tempStyleTags.push(tempStyle);
+          
+          // Disable the original sheet
+          sheetOwner.disabled = true;
+        }
+      } catch (e) {
+        // Fallback for security issues or cross-origin restrictions
+        const cssText = sheetOwner.innerHTML || '';
+        if (cssText.includes('oklch') || cssText.includes('oklab')) {
+          const sanitizedCSS = cssText
+            .replace(/oklch\([^)]+\)/g, '#000000')
+            .replace(/oklab\([^)]+\)/g, '#000000');
+          
+          const tempStyle = document.createElement('style');
+          tempStyle.innerHTML = sanitizedCSS;
+          document.head.appendChild(tempStyle);
+          tempStyleTags.push(tempStyle);
+          
+          sheetOwner.disabled = true;
+        }
+      }
+    };
+
+    // 2. Process all <style> tags
+    styleTags.forEach(style => {
+      if (!style.disabled) {
+        let rules = null;
+        try {
+          rules = style.sheet ? style.sheet.cssRules : null;
+        } catch (e) {}
+        processStylesheet(style, rules);
+      }
+    });
+
+    // 3. Process all <link rel="stylesheet"> tags
+    linkTags.forEach(link => {
+      if (!link.disabled) {
+        let rules = null;
+        try {
+          rules = link.sheet ? link.sheet.cssRules : null;
+        } catch (e) {}
+        processStylesheet(link, rules);
+      }
+    });
+
+    return await html2canvas(element, options);
+  } finally {
+    // 4. Restore everything
+    if (originalAdopted && originalAdopted.length > 0) {
+      document.adoptedStyleSheets = originalAdopted;
+    }
+    styleTags.forEach(style => {
+      style.disabled = false;
+    });
+    linkTags.forEach(link => {
+      link.disabled = false;
+    });
+    tempStyleTags.forEach(temp => {
+      temp.remove();
+    });
+  }
+};
 
 export default function InvoicePreview({ invoice, isOpen, onClose }) {
   if (!invoice) return null
@@ -68,13 +162,46 @@ export default function InvoicePreview({ invoice, isOpen, onClose }) {
 
     try {
       // PDF generation is executed on a cloned node in memory, avoiding live layout shifts and zoom bugs on phone screen.
-      const canvas = await html2canvas(element, {
+      const canvas = await callHtml2CanvasSafely(element, {
         scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
         windowWidth: 800,
         onclone: (clonedDoc) => {
+          // 1. Inject safe color variable overrides
+          const overrideStyle = clonedDoc.createElement('style')
+          overrideStyle.innerHTML = `
+            :root {
+              --color-slate-50: #f8fafc !important;
+              --color-slate-100: #f1f5f9 !important;
+              --color-slate-200: #e2e8f0 !important;
+              --color-slate-300: #cbd5e1 !important;
+              --color-slate-400: #94a3b8 !important;
+              --color-slate-500: #64748b !important;
+              --color-slate-800: #1e293b !important;
+              --color-slate-900: #0f172a !important;
+              --color-blue-500: #3b82f6 !important;
+              --color-blue-600: #2563eb !important;
+              --color-emerald-600: #059669 !important;
+              --color-orange-600: #ea580c !important;
+            }
+          `
+          clonedDoc.head.appendChild(overrideStyle)
+
+          // 2. Sanitize all stylesheet definitions in the clone to strip oklch/oklab
+          Array.from(clonedDoc.querySelectorAll('style')).forEach(style => {
+            try {
+              if (style.innerHTML) {
+                style.innerHTML = style.innerHTML
+                  .replace(/oklch\([^)]+\)/g, '#000000')
+                  .replace(/oklab\([^)]+\)/g, '#000000')
+              }
+            } catch (e) {
+              console.error('Error cleaning style tag:', e)
+            }
+          })
+
           const clonedElement = clonedDoc.getElementById('invoice-print')
           if (clonedElement) {
             clonedElement.style.width = '800px'
@@ -99,6 +226,75 @@ export default function InvoicePreview({ invoice, isOpen, onClose }) {
     } catch (error) {
       console.error('Erreur PDF:', error)
       alert("Impossible de générer le PDF : " + error.message)
+    }
+  }
+
+  const handleDownloadPNG = async () => {
+    const element = document.getElementById('invoice-print')
+    if (!element) return
+
+    try {
+      const canvas = await callHtml2CanvasSafely(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: 800,
+        onclone: (clonedDoc) => {
+          // 1. Inject safe color variable overrides
+          const overrideStyle = clonedDoc.createElement('style')
+          overrideStyle.innerHTML = `
+            :root {
+              --color-slate-50: #f8fafc !important;
+              --color-slate-100: #f1f5f9 !important;
+              --color-slate-200: #e2e8f0 !important;
+              --color-slate-300: #cbd5e1 !important;
+              --color-slate-400: #94a3b8 !important;
+              --color-slate-500: #64748b !important;
+              --color-slate-800: #1e293b !important;
+              --color-slate-900: #0f172a !important;
+              --color-blue-500: #3b82f6 !important;
+              --color-blue-600: #2563eb !important;
+              --color-emerald-600: #059669 !important;
+              --color-orange-600: #ea580c !important;
+            }
+          `
+          clonedDoc.head.appendChild(overrideStyle)
+
+          // 2. Sanitize stylesheets
+          Array.from(clonedDoc.querySelectorAll('style')).forEach(style => {
+            try {
+              if (style.innerHTML) {
+                style.innerHTML = style.innerHTML
+                  .replace(/oklch\([^)]+\)/g, '#000000')
+                  .replace(/oklab\([^)]+\)/g, '#000000')
+              }
+            } catch (e) {
+              console.error('Error cleaning style tag:', e)
+            }
+          })
+
+          const clonedElement = clonedDoc.getElementById('invoice-print')
+          if (clonedElement) {
+            clonedElement.style.width = '800px'
+            clonedElement.style.minWidth = '800px'
+            clonedElement.style.maxWidth = 'none'
+            clonedElement.style.zoom = '1'
+            clonedElement.style.transform = 'none'
+            clonedElement.style.marginLeft = '0px'
+            clonedElement.style.marginRight = '0px'
+          }
+        }
+      })
+      
+      const imgData = canvas.toDataURL('image/png')
+      const link = document.createElement('a')
+      link.href = imgData
+      link.download = `Facture_BrigadeMobile_${invoice.id || 'PROVISOIRE'}.png`
+      link.click()
+    } catch (error) {
+      console.error('Erreur PNG:', error)
+      alert("Impossible de générer le PNG : " + error.message)
     }
   }
 
@@ -288,6 +484,13 @@ export default function InvoicePreview({ invoice, isOpen, onClose }) {
           <Button variant="outline" className="bg-white/5 border-white/20 text-white hover:bg-white/10 gap-2 w-full sm:w-auto px-6" onClick={handlePrint}>
             <Printer className="w-4 h-4" />
             Imprimer
+          </Button>
+          <Button 
+            onClick={handleDownloadPNG} 
+            className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/20 gap-2 px-8 w-full sm:w-auto font-bold"
+          >
+             <Download className="w-4 h-4" />
+             Télécharger PNG
           </Button>
           <Button 
             onClick={handleDownloadPDF} 
