@@ -317,7 +317,7 @@ export default function InvoicePreview({ invoice, isOpen, onClose }) {
         </div>
 
         {/* Scrollable canvas area */}
-        <div className="max-h-[70vh] overflow-auto w-full custom-scrollbar bg-slate-950/80 py-8 block">
+        <div className="max-h-[50vh] sm:max-h-[70vh] overflow-auto w-full custom-scrollbar bg-slate-950/80 py-8 block">
           <div 
             id="invoice-print" 
             style={{ 
@@ -477,27 +477,35 @@ export default function InvoicePreview({ invoice, isOpen, onClose }) {
         </div>
 
         {/* Premium dialog footer bar */}
-        <div className="bg-slate-900 p-4 sm:p-6 flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-3 border-t border-white/10 print:hidden sticky bottom-0 z-30">
-          <Button variant="ghost" className="text-white/50 hover:text-white hover:bg-white/10 w-full sm:w-auto px-6" onClick={onClose}>
+        <div className="bg-slate-900 p-3 sm:p-6 grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:justify-end sm:items-center sm:gap-3 border-t border-white/10 print:hidden sticky bottom-0 z-30">
+          <Button 
+            variant="ghost" 
+            className="text-white/50 hover:text-white hover:bg-white/10 w-full sm:w-auto px-4 order-4 sm:order-1 col-span-2 sm:col-span-1" 
+            onClick={onClose}
+          >
             Fermer
           </Button>
-          <Button variant="outline" className="bg-white/5 border-white/20 text-white hover:bg-white/10 gap-2 w-full sm:w-auto px-6" onClick={handlePrint}>
-            <Printer className="w-4 h-4" />
+          <Button 
+            variant="outline" 
+            className="bg-white/5 border-white/20 text-white hover:bg-white/10 gap-1.5 w-full sm:w-auto px-4 order-3 sm:order-2 text-xs sm:text-sm" 
+            onClick={handlePrint}
+          >
+            <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             Imprimer
           </Button>
           <Button 
             onClick={handleDownloadPNG} 
-            className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/20 gap-2 px-8 w-full sm:w-auto font-bold"
+            className="bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/20 gap-1.5 px-4 sm:px-8 w-full sm:w-auto font-bold order-2 sm:order-3 text-xs sm:text-sm"
           >
-             <Download className="w-4 h-4" />
+             <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
              Télécharger PNG
           </Button>
           <Button 
             onClick={handleDownloadPDF} 
-            className="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20 gap-2 px-8 w-full sm:w-auto font-bold"
+            className="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20 gap-1.5 px-4 sm:px-8 w-full sm:w-auto font-bold order-1 sm:order-4 col-span-2 sm:col-span-1 text-xs sm:text-sm"
           >
-             <Download className="w-4 h-4" />
-             Télécharger PDF Premium
+             <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+             PDF Premium
           </Button>
         </div>
         
