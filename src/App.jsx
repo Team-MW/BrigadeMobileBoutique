@@ -9,6 +9,7 @@ import Debug from './pages/Debug'
 import GrilleTarifaire from './pages/GrilleTarifaire'
 import Organisation from './pages/Organisation'
 import Stock from './pages/Stock'
+import StockEcran from './pages/StockEcran'
 import './index.css'
 
 function Layout({ children }) {
@@ -38,6 +39,7 @@ function App() {
             <Route path="/tarifs" element={<GrilleTarifaire />} />
             <Route path="/organisation" element={<Organisation />} />
             <Route path="/stock" element={<Stock />} />
+            <Route path="/stock-ecran" element={<StockEcran />} />
             <Route path="/debug" element={<Debug />} />
           </Routes>
         </Layout>

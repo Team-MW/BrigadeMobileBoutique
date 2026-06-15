@@ -89,3 +89,19 @@ CREATE TABLE IF NOT EXISTS public.stock (
 
 ALTER TABLE public.stock ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Autoriser tout sur stock" ON public.stock AS PERMISSIVE FOR ALL TO public USING (true) WITH CHECK (true);
+
+-- 6. Table de gestion de stock écran
+CREATE TABLE IF NOT EXISTS public.stock_ecran (
+    id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+    name text NOT NULL,
+    category text,
+    quantity numeric DEFAULT 0,
+    price numeric DEFAULT 0,
+    created_at timestamp with time zone DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.stock_ecran ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Autoriser tout sur stock_ecran" ON public.stock_ecran;
+CREATE POLICY "Autoriser tout sur stock_ecran" ON public.stock_ecran AS PERMISSIVE FOR ALL TO public USING (true) WITH CHECK (true);
+
+

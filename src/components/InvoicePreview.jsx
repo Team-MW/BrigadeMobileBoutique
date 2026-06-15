@@ -1,14 +1,37 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
-import { Printer, Download } from 'lucide-react'
+import { Printer, Download, FileText, X } from 'lucide-react'
 import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 
-const LOGO_BASE64 = "data:image/png;base64,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"
+const LOGO_BASE64 = "data:image/png;base64,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"
 
 export default function InvoicePreview({ invoice, isOpen, onClose }) {
   if (!invoice) return null
+
+  const [zoomFactor, setZoomFactor] = useState(1)
+  const [leftMargin, setLeftMargin] = useState(0)
+
+  useEffect(() => {
+    if (!isOpen) return
+    const handleResize = () => {
+      // The modal's max width on desktop is capped at 896px (max-w-4xl). On mobile, it is (window.innerWidth - 32px).
+      const containerWidth = Math.min(window.innerWidth - 32, 896)
+      const targetWidth = 800
+      const zoom = Math.min(containerWidth / targetWidth, 1)
+      
+      setZoomFactor(zoom)
+      
+      // Calculate centering margin. On mobile, remainingSpace is 0, keeping the left margin at 0.
+      const remainingSpace = containerWidth - (targetWidth * zoom)
+      setLeftMargin(Math.max(0, remainingSpace / 2))
+    }
+    
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [isOpen, invoice])
 
   const handlePrint = () => {
     const content = document.getElementById('invoice-print')?.innerHTML
@@ -44,24 +67,27 @@ export default function InvoicePreview({ invoice, isOpen, onClose }) {
     if (!element) return
 
     try {
-      // Fix temporary width to ensure full capture on mobile without clone issues
-      const originalWidth = element.style.width
-      const originalMaxWidth = element.style.maxWidth
-      element.style.width = '800px'
-      element.style.maxWidth = 'none'
-
+      // PDF generation is executed on a cloned node in memory, avoiding live layout shifts and zoom bugs on phone screen.
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
         windowWidth: 800,
+        onclone: (clonedDoc) => {
+          const clonedElement = clonedDoc.getElementById('invoice-print')
+          if (clonedElement) {
+            clonedElement.style.width = '800px'
+            clonedElement.style.minWidth = '800px'
+            clonedElement.style.maxWidth = 'none'
+            clonedElement.style.zoom = '1'
+            clonedElement.style.transform = 'none'
+            clonedElement.style.marginLeft = '0px'
+            clonedElement.style.marginRight = '0px'
+          }
+        }
       })
       
-      // Restore styles
-      element.style.width = originalWidth
-      element.style.maxWidth = originalMaxWidth
-
       const imgData = canvas.toDataURL('image/png')
       const pdf = new jsPDF('p', 'mm', 'a4')
       
@@ -78,11 +104,38 @@ export default function InvoicePreview({ invoice, isOpen, onClose }) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl p-0 overflow-hidden bg-black/40 backdrop-blur-xl border-white/10 shadow-2xl">
-        <div className="max-h-[85vh] overflow-auto w-full custom-scrollbar">
-          <div id="invoice-print" className="p-8 sm:p-16 space-y-12 bg-[#ffffff] text-[#1a1a1a] font-sans min-w-[800px]">
+      <DialogContent className="max-w-4xl p-0 overflow-hidden bg-[#1e293b] border-white/10 shadow-2xl rounded-2xl flex flex-col">
+        {/* Sticky top header for document control */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-slate-900/50 backdrop-blur-md sticky top-0 z-30">
+          <div className="flex items-center gap-2">
+            <FileText className="w-5 h-5 text-blue-500" />
+            <span className="text-xs font-bold text-white uppercase tracking-wider">Aperçu de la Facture</span>
+          </div>
+          <button 
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+            title="Fermer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Scrollable canvas area */}
+        <div className="max-h-[70vh] overflow-auto w-full custom-scrollbar bg-slate-950/80 py-8 block">
+          <div 
+            id="invoice-print" 
+            style={{ 
+              zoom: zoomFactor,
+              marginLeft: `${leftMargin}px`,
+              marginRight: `${leftMargin}px`,
+              marginTop: '0px',
+              marginBottom: '0px',
+              transformOrigin: 'top left' // Explicit top-left origin for zoom stability
+            }}
+            className="p-8 sm:p-16 space-y-12 bg-[#ffffff] text-[#1a1a1a] font-sans min-w-[800px] w-[800px] shadow-2xl shadow-black/80 rounded-sm border border-black/5"
+          >
             {/* Header section with distinct layout */}
-            <div className="flex justify-between items-start border-b-4 border-[#000000] pb-10">
+            <div className="flex justify-between items-start border-b-4 border-slate-900 pb-10">
               <div className="space-y-6">
                 <img 
                   src={LOGO_BASE64} 
@@ -91,42 +144,50 @@ export default function InvoicePreview({ invoice, isOpen, onClose }) {
                   onError={(e) => e.target.style.display = 'none'} 
                 />
                 <div className="space-y-1">
-                  <h1 className="text-4xl font-black uppercase tracking-tighter leading-none">
+                  <h1 className="text-4xl font-black uppercase tracking-tighter leading-none text-slate-900">
                     BRIGADE MOBILE
                   </h1>
-                  <p className="text-sm font-bold text-[#9ca3af] tracking-widest">Expertise Réparation & Tech</p>
+                  <p className="text-sm font-bold text-slate-400 tracking-widest">Expertise Réparation & Tech</p>
                 </div>
               </div>
               
-              <div className="text-right space-y-1">
-                <div className="inline-block bg-[#000000] text-[#ffffff] px-4 py-2 mb-4">
-                  <p className="text-[10px] uppercase tracking-widest font-bold opacity-70">Facture No.</p>
-                  <p className="text-2xl font-mono font-bold leading-none">{invoice.id || 'PROVISOIRE'}</p>
+              <div className="text-right space-y-2">
+                {/* Premium formatted invoice indicator */}
+                <div className="inline-block border-2 border-slate-900 text-slate-900 px-4 py-2.5 rounded-xl bg-slate-50">
+                  <p className="text-[9px] uppercase tracking-widest font-extrabold text-slate-500 leading-tight">Facture N°</p>
+                  <p className="text-sm font-mono font-extrabold tracking-tight">
+                    {invoice.id ? `BM-${invoice.id.split('-')[0].toUpperCase()}` : 'PROVISOIRE'}
+                  </p>
                 </div>
-                <div className="text-sm">
-                  <p className="font-bold uppercase text-[10px] text-[#9ca3af]">Date d'émission</p>
-                  <p className="font-medium">{new Date(invoice.createdAt || Date.now()).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                {invoice.id && (
+                  <p className="text-[9px] text-slate-400 font-mono tracking-tight leading-none">UUID: {invoice.id}</p>
+                )}
+                <div className="text-sm pt-2">
+                  <p className="font-bold uppercase text-[9px] text-slate-400 tracking-wider">Date d'émission</p>
+                  <p className="font-semibold text-slate-800">
+                    {new Date(invoice.createdAt || Date.now()).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                  </p>
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-16">
               <div className="space-y-4">
-                <div className="border-l-4 border-[#000000] pl-4">
-                  <p className="text-[10px] uppercase font-black text-[#9ca3af] tracking-[0.2em] mb-2">Émetteur</p>
-                  <p className="text-sm font-bold">BRIGADE MOBILE</p>
+                <div className="border-l-4 border-slate-900 pl-4">
+                  <p className="text-[10px] uppercase font-black text-slate-400 tracking-[0.2em] mb-2">Émetteur</p>
+                  <p className="text-sm font-bold text-slate-800">BRIGADE MOBILE</p>
                   <p className="text-sm text-[#4b5563]">65 route de Blagnac</p>
                   <p className="text-sm text-[#4b5563]">31200 Toulouse</p>
-                  <p className="text-[10px] font-mono mt-2 pt-2 border-t border-[#f3f4f6] text-[#9ca3af]">SIRET: 78899543900023</p>
+                  <p className="text-[10px] font-mono mt-2 pt-2 border-t border-[#f3f4f6] text-slate-400">SIRET: 78899543900023</p>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <div className="border-l-4 border-[#2563eb] pl-4">
-                  <p className="text-[10px] uppercase font-black text-[#2563eb] tracking-[0.2em] mb-2">Destinataire</p>
-                  <p className="text-lg font-black uppercase tracking-tight">{invoice.clientName || 'CLIENT'}</p>
+                <div className="border-l-4 border-blue-600 pl-4">
+                  <p className="text-[10px] uppercase font-black text-blue-600 tracking-[0.2em] mb-2">Destinataire</p>
+                  <p className="text-lg font-black uppercase tracking-tight text-slate-900">{invoice.clientName || 'CLIENT'}</p>
                   {invoice.clientPhone && <p className="text-sm font-semibold text-[#4b5563]">Tél: {invoice.clientPhone}</p>}
-                  {invoice.imei && <p className="text-sm font-mono text-[#2563eb]/80">IMEI: {invoice.imei}</p>}
+                  {invoice.imei && <p className="text-sm font-mono text-blue-600/80">IMEI: {invoice.imei}</p>}
                   {invoice.clientAddress && <p className="text-sm text-[#6b7280] mt-1">{invoice.clientAddress}</p>}
                 </div>
               </div>
@@ -136,26 +197,26 @@ export default function InvoicePreview({ invoice, isOpen, onClose }) {
             <div className="space-y-4">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-[#f9fafb]">
-                    <th className="py-4 px-4 text-left text-[10px] font-black uppercase tracking-widest">Désignation</th>
-                    <th className="py-4 px-4 text-center text-[10px] font-black uppercase tracking-widest w-24">Qté</th>
-                    <th className="py-4 px-4 text-right text-[10px] font-black uppercase tracking-widest w-32">P.U (TTC)</th>
-                    <th className="py-4 px-4 text-right text-[10px] font-black uppercase tracking-widest w-32">Total (TTC)</th>
+                  <tr className="bg-slate-900 text-white">
+                    <th className="py-3 px-4 text-left text-[9px] font-bold uppercase tracking-wider rounded-l-lg">Désignation</th>
+                    <th className="py-3 px-4 text-center text-[9px] font-bold uppercase tracking-wider w-24">Qté</th>
+                    <th className="py-3 px-4 text-right text-[9px] font-bold uppercase tracking-wider w-32">P.U (TTC)</th>
+                    <th className="py-3 px-4 text-right text-[9px] font-bold uppercase tracking-wider w-32 rounded-r-lg">Total (TTC)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#f3f4f6]">
+                <tbody className="divide-y divide-slate-100">
                   {(invoice.items || []).map((item, i) => (
-                    <tr key={i} className="hover:bg-[#f9fafb]/50 transition-colors">
-                      <td className="py-5 px-4">
-                        <p className="text-sm font-bold text-[#1f2937]">{item.description}</p>
+                    <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="py-4 px-4">
+                        <p className="text-sm font-bold text-slate-800">{item.description}</p>
                       </td>
-                      <td className="py-5 px-4 text-center text-sm font-medium text-[#4b5563]">
+                      <td className="py-4 px-4 text-center text-sm font-medium text-slate-600">
                         {item.quantity}
                       </td>
-                      <td className="py-5 px-4 text-right text-sm font-medium">
+                      <td className="py-4 px-4 text-right text-sm font-medium text-slate-600">
                         {parseFloat(item.price).toFixed(2)} €
                       </td>
-                      <td className="py-5 px-4 text-right text-sm font-black">
+                      <td className="py-4 px-4 text-right text-sm font-black text-slate-900">
                         {(item.quantity * item.price).toFixed(2)} €
                       </td>
                     </tr>
@@ -169,34 +230,34 @@ export default function InvoicePreview({ invoice, isOpen, onClose }) {
               <div className="max-w-[50%]">
                 {invoice.notes && (
                   <div className="space-y-2">
-                    <p className="text-[10px] uppercase font-bold text-[#d1d5db] tracking-widest">Observations</p>
-                    <p className="text-xs text-[#6b7280] italic leading-relaxed">{invoice.notes}</p>
+                    <p className="text-[10px] uppercase font-bold text-slate-300 tracking-widest">Observations</p>
+                    <p className="text-xs text-slate-500 italic leading-relaxed">{invoice.notes}</p>
                   </div>
                 )}
               </div>
               
-              <div className="w-72 space-y-3 bg-[#f9fafb] p-6 rounded-xl border border-[#f3f4f6]">
-                <div className="flex justify-between text-xs text-[#6b7280] font-medium tracking-tight">
+              <div className="w-72 space-y-3 bg-slate-50 p-6 rounded-xl border border-slate-100 shadow-sm">
+                <div className="flex justify-between text-xs text-slate-500 font-medium tracking-tight">
                   <span>Total HT</span>
-                  <span>{(invoice.total / 1.2).toFixed(2)} €</span>
+                  <span className="font-mono">{(invoice.total / 1.2).toFixed(2)} €</span>
                 </div>
-                <div className="flex justify-between text-xs text-[#6b7280] font-medium tracking-tight">
+                <div className="flex justify-between text-xs text-slate-500 font-medium tracking-tight">
                   <span>TVA (20%)</span>
-                  <span>{(invoice.total - (invoice.total / 1.2)).toFixed(2)} €</span>
+                  <span className="font-mono">{(invoice.total - (invoice.total / 1.2)).toFixed(2)} €</span>
                 </div>
-                <div className="flex justify-between items-center pt-3 border-t-2 border-dashed border-[#e5e7eb]">
-                  <span className="text-sm font-black uppercase tracking-widest text-[#9ca3af]">Total TTC</span>
-                  <span className="text-2xl font-black text-[#2563eb]">{parseFloat(invoice.total || 0).toFixed(2)} €</span>
+                <div className="flex justify-between items-center pt-3 border-t border-dashed border-slate-200">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Total TTC</span>
+                  <span className="text-xl font-black text-blue-600 font-mono">{parseFloat(invoice.total || 0).toFixed(2)} €</span>
                 </div>
                 {invoice.acompte > 0 && (
                   <>
-                    <div className="flex justify-between text-xs text-[#16a34a] font-bold pt-2">
+                    <div className="flex justify-between text-xs text-emerald-600 font-bold pt-2">
                       <span>Acompte versé</span>
-                      <span>-{parseFloat(invoice.acompte).toFixed(2)} €</span>
+                      <span className="font-mono">-{parseFloat(invoice.acompte).toFixed(2)} €</span>
                     </div>
-                    <div className="flex justify-between text-sm font-black text-[#ea580c] pt-1 border-t border-[#f3f4f6]">
+                    <div className="flex justify-between items-center text-sm font-black text-orange-600 pt-2 border-t border-slate-100">
                       <span>SOLDE À PAYER</span>
-                      <span>{(parseFloat(invoice.total) - parseFloat(invoice.acompte)).toFixed(2)} €</span>
+                      <span className="font-mono">{(parseFloat(invoice.total) - parseFloat(invoice.acompte)).toFixed(2)} €</span>
                     </div>
                   </>
                 )}
@@ -205,12 +266,12 @@ export default function InvoicePreview({ invoice, isOpen, onClose }) {
 
             {/* Footer and Terms */}
             <div className="pt-16 space-y-6 text-center">
-              <div className="flex items-center justify-center gap-4 text-[9px] font-black uppercase tracking-widest text-[#d1d5db]">
+              <div className="flex items-center justify-center gap-4 text-[9px] font-black uppercase tracking-widest text-slate-200">
                 <div className="h-[1px] flex-1 bg-[#f3f4f6]"></div>
                 <span>Merci de votre confiance</span>
                 <div className="h-[1px] flex-1 bg-[#f3f4f6]"></div>
               </div>
-              <p className="text-[10px] text-[#9ca3af] leading-relaxed max-w-lg mx-auto">
+              <p className="text-[10px] text-slate-400 leading-relaxed max-w-lg mx-auto">
                 BRIGADE MOBILE — SIRET: 78899543900023 — 65 route de Blagnac, 31200 Toulouse<br />
                 En cas de réparation, la garantie est de 3 mois (hors casse, oxydation ou intervention tiers). 
                 La facture doit être présentée pour toute réclamation.
@@ -219,23 +280,22 @@ export default function InvoicePreview({ invoice, isOpen, onClose }) {
           </div>
         </div>
 
-        <div className="bg-black/90 p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 backdrop-blur-md border-t border-white/10 print:hidden sticky bottom-0">
-          <Button variant="ghost" className="text-white/50 hover:text-white hover:bg-white/10 w-full sm:w-auto order-last sm:order-first" onClick={onClose}>
-            Fermer l'aperçu
+        {/* Premium dialog footer bar */}
+        <div className="bg-slate-900 p-4 sm:p-6 flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-3 border-t border-white/10 print:hidden sticky bottom-0 z-30">
+          <Button variant="ghost" className="text-white/50 hover:text-white hover:bg-white/10 w-full sm:w-auto px-6" onClick={onClose}>
+            Fermer
           </Button>
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            <Button variant="outline" className="bg-white/5 border-white/20 text-white hover:bg-white/10 gap-2 w-full sm:w-auto" onClick={handlePrint}>
-              <Printer className="w-4 h-4" />
-              Imprimer
-            </Button>
-            <Button 
-              onClick={handleDownloadPDF} 
-              className="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20 gap-2 px-6 w-full sm:w-auto"
-            >
-               <Download className="w-4 h-4" />
-               Télécharger PDF Premium
-            </Button>
-          </div>
+          <Button variant="outline" className="bg-white/5 border-white/20 text-white hover:bg-white/10 gap-2 w-full sm:w-auto px-6" onClick={handlePrint}>
+            <Printer className="w-4 h-4" />
+            Imprimer
+          </Button>
+          <Button 
+            onClick={handleDownloadPDF} 
+            className="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20 gap-2 px-8 w-full sm:w-auto font-bold"
+          >
+             <Download className="w-4 h-4" />
+             Télécharger PDF Premium
+          </Button>
         </div>
         
         <style dangerouslySetInnerHTML={{ __html: `
