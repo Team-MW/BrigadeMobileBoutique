@@ -20,7 +20,9 @@ export default function Sidebar() {
     <>
       {/* --- MOBILE BOTTOM NAVIGATION --- */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-sidebar border-t border-sidebar-border flex items-center justify-around px-1 py-2 pb-safe shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.1)]">
-        {navItems.map(({ to, icon: Icon, shortLabel }) => (
+        {navItems
+          .filter(item => item.to !== '/stock' && item.to !== '/stock-ecran')
+          .map(({ to, icon: Icon, shortLabel }) => (
           <NavLink
             key={to}
             to={to}
