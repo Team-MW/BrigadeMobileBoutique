@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 
 const IPHONE_MODELS = [
+  "iPhone 17 Pro Max", "iPhone 17 Pro", "iPhone 17",
   "iPhone 15 Pro Max", "iPhone 15 Pro", "iPhone 15 Plus", "iPhone 15",
   "iPhone 14 Pro Max", "iPhone 14 Pro", "iPhone 14 Plus", "iPhone 14",
   "iPhone 13 Pro Max", "iPhone 13 Pro", "iPhone 13", "iPhone 13 mini",
@@ -85,15 +86,6 @@ export default function GrilleTarifaire() {
         <div>
           <h1 className="text-4xl font-extrabold text-foreground tracking-tight">Grille Tarifaire</h1>
           <p className="text-muted-foreground mt-2 text-lg">Gérez les prix de réparation pour chaque modèle d'iPhone</p>
-        </div>
-        <div className="flex gap-3">
-          <button 
-            onClick={clearAll}
-            className="px-4 py-2 bg-destructive/10 text-destructive rounded-xl hover:bg-destructive hover:text-destructive-foreground transition-all flex items-center gap-2 font-medium"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Réinitialiser
-          </button>
         </div>
       </div>
 
