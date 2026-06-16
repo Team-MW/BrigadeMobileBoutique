@@ -4,9 +4,36 @@ import { Plus, Trash2, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 
+const CATEGORY_TABS = [
+  { id: 'all', label: 'Toutes' },
+  { id: 'coques', label: 'Coques & Protections' },
+  { id: 'accessoires', label: 'Accessoires' },
+  { id: 'pieces', label: 'Pièces' },
+  { id: 'others', label: 'Autres' }
+];
+
 export default function Stock() {
   const [items, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('all');
+
+  const matchesTab = (item, tab) => {
+    const cat = (item.category || '').toUpperCase().trim();
+    const name = (item.name || '').toUpperCase().trim();
+
+    const isCoque = cat.includes('PROTECTION') || cat.includes('GLASS') || name.includes('COQUE') || name.includes('GLASS') || name.includes('VITRE');
+    const isAccessoire = cat.includes('CHARGE') || cat.includes('CABLE') || cat.includes('ADAPTATEUR') || cat.includes('ECOUTEUR') || cat.includes('ACCESSOIRE') || name.includes('CHARGER') || name.includes('CABLE') || name.includes('EARPODS') || name.includes('POWER') || name.includes('ADAPTER') || name.includes('ECOUTEUR');
+    const isPiece = cat.includes('PIECE') || cat.includes('ECRAN') || cat.includes('BATTERIE') || name.includes('ECRAN') || name.includes('BATTERIE') || name.includes('AFFICHEUR');
+
+    if (tab === 'all') return true;
+    if (tab === 'coques') return isCoque;
+    if (tab === 'accessoires') return isAccessoire;
+    if (tab === 'pieces') return isPiece;
+    if (tab === 'others') return !isCoque && !isAccessoire && !isPiece;
+    return true;
+  };
+
+  const filteredItems = items.filter(item => matchesTab(item, activeTab));
 
   useEffect(() => {
     loadStock();
@@ -46,11 +73,25 @@ export default function Stock() {
   };
 
   const handleAddNewRow = async () => {
+    let defaultCategory = '';
+    let defaultName = 'Nouvel article';
+
+    if (activeTab === 'coques') {
+      defaultCategory = 'PROTECTION';
+      defaultName = 'Coque protection';
+    } else if (activeTab === 'accessoires') {
+      defaultCategory = 'ACCESSOIRE';
+      defaultName = 'Accessoire';
+    } else if (activeTab === 'pieces') {
+      defaultCategory = 'PIECE';
+      defaultName = 'Pièce détachée';
+    }
+
     const { data, error } = await supabase
       .from('stock')
       .insert([{ 
-        name: 'Nouvel article', 
-        category: '', 
+        name: defaultName, 
+        category: defaultCategory, 
         quantity: 0, 
         price: 0 
       }])
@@ -97,6 +138,37 @@ export default function Stock() {
         </button>
       </div>
 
+      {/* Category Tabs */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        {CATEGORY_TABS.map(tab => {
+          const count = items.filter(item => matchesTab(item, tab.id)).length;
+          const isActive = activeTab === tab.id;
+
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                "px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 border shadow-sm",
+                isActive
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card/50 backdrop-blur-sm hover:bg-card border-border/50 text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <span>{tab.label}</span>
+              <span className={cn(
+                "text-[10px] px-1.5 py-0.5 rounded-md font-extrabold",
+                isActive 
+                  ? "bg-primary-foreground/20 text-primary-foreground" 
+                  : "bg-secondary text-secondary-foreground"
+              )}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
       <Card className="border-border/50 shadow-xl overflow-hidden bg-card/50 backdrop-blur-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left border-collapse">
@@ -129,13 +201,13 @@ export default function Stock() {
                     </div>
                   </td>
                 </tr>
-              ) : items.length === 0 ? (
+              ) : filteredItems.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="px-6 py-12 text-center text-muted-foreground">
-                    Aucun article. Cliquez sur "Ajouter une ligne" pour commencer.
+                    Aucun article dans cette catégorie. Cliquez sur "Ajouter une ligne" pour commencer.
                   </td>
                 </tr>
-              ) : items.map((item, idx) => {
+              ) : filteredItems.map((item, idx) => {
                 const rowBg = idx % 2 === 0 ? "bg-card" : "bg-muted/40";
                 
                 return (

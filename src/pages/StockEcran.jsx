@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
-import { Smartphone, AlertTriangle, Copy, Check, RefreshCw } from 'lucide-react';
+import { Smartphone, AlertTriangle, Copy, Check, RefreshCw, Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 
@@ -34,7 +34,7 @@ const IPHONE_MODELS = [
   "iPhone 8 Plus", "iPhone 8", "iPhone 7 Plus", "iPhone 7", "iPhone SE"
 ];
 
-const SCREEN_QUALITIES = ["OLED", "SPARK", "AQ7", "Écran"];
+const SCREEN_QUALITIES = ["OLED", "SPARK", "Écran", "Batterie"];
 
 const normalizeModelName = (name) => {
   if (!name) return "";
@@ -108,6 +108,11 @@ export default function StockEcran() {
   const [isLoading, setIsLoading] = useState(true);
   const [dbTableMissing, setDbTableMissing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredModels = IPHONE_MODELS.filter(model =>
+    model.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   useEffect(() => {
     loadStock();
@@ -131,9 +136,12 @@ export default function StockEcran() {
         const normalizedModel = normalizeModelName(item.name);
         let quality = item.category || 'Écran';
         
-        // Normalize quality typos
+        // Normalize quality typos or renames
         if (quality.toUpperCase() === 'SOARK' || quality.toUpperCase() === 'SPARK') {
           quality = 'SPARK';
+        }
+        if (quality.toUpperCase() === 'AQ7') {
+          quality = 'Batterie';
         }
         
         if (!SCREEN_QUALITIES.includes(quality)) {
@@ -276,7 +284,7 @@ export default function StockEcran() {
         </div>
       )}
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-4xl font-extrabold text-foreground tracking-tight flex items-center gap-3">
             <Smartphone className="w-10 h-10 text-primary" />
@@ -287,12 +295,34 @@ export default function StockEcran() {
         <button
           onClick={loadStock}
           disabled={isLoading}
-          className="p-2.5 rounded-xl border border-border bg-secondary hover:bg-secondary/80 transition-colors flex items-center gap-2 text-sm font-semibold text-foreground"
+          className="p-2.5 rounded-xl border border-border bg-secondary hover:bg-secondary/80 transition-colors flex items-center gap-2 text-sm font-semibold text-foreground shrink-0 self-start sm:self-auto"
           title="Actualiser le stock"
         >
           <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
           Actualiser
         </button>
+      </div>
+
+      {/* Search Bar */}
+      <div className="relative max-w-md">
+        <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+          <Search className="w-4 h-4 text-muted-foreground" />
+        </span>
+        <input
+          type="text"
+          placeholder="Rechercher un modèle d'iPhone..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-9 pr-4 py-2.5 bg-card/50 backdrop-blur-sm rounded-xl border border-border focus:border-primary focus:ring-1 focus:ring-primary text-sm font-medium text-foreground transition-all"
+        />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       <Card className="border-border/50 shadow-xl overflow-hidden bg-card/50 backdrop-blur-sm">
@@ -320,7 +350,13 @@ export default function StockEcran() {
                     </div>
                   </td>
                 </tr>
-              ) : IPHONE_MODELS.map((model, idx) => {
+              ) : filteredModels.length === 0 ? (
+                <tr>
+                  <td colSpan={SCREEN_QUALITIES.length + 1} className="px-6 py-12 text-center text-muted-foreground font-medium">
+                    Aucun modèle d'iPhone trouvé pour "{searchQuery}".
+                  </td>
+                </tr>
+              ) : filteredModels.map((model, idx) => {
                 const rowBg = idx % 2 === 0 ? "bg-card" : "bg-muted/40";
                 
                 return (
