@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useShop } from '@/context/ShopContext'
 import Header from '@/components/Header'
 import InvoicePreview from '@/components/InvoicePreview'
@@ -15,8 +15,10 @@ import { useNavigate } from 'react-router-dom'
 import {
   Plus, Search, Filter, Edit, Trash2, Wrench, ShoppingBag,
   CheckCircle, Clock, AlertCircle, Download, ChevronUp, ChevronDown,
-  X, Euro, TrendingUp, FileText, RefreshCw
+  X, Euro, TrendingUp, FileText, RefreshCw, Smartphone
 } from 'lucide-react'
+import PatternLock from '@/components/PatternLock'
+import { cn } from '@/lib/utils'
 
 const STATUS_CONFIG = {
   'Terminé': { badge: 'success', icon: CheckCircle, color: 'text-green-400' },
@@ -42,6 +44,8 @@ const SERVICES = [
 ]
 
 const MODELS = [
+  'iPhone 17 Pro Max', 'iPhone 17 Pro', 'iPhone 17',
+  'iPhone 16 Pro Max', 'iPhone 16 Pro', 'iPhone 16 Plus', 'iPhone 16',
   'iPhone 15 Pro Max', 'iPhone 15 Pro', 'iPhone 15 Plus', 'iPhone 15',
   'iPhone 14 Pro Max', 'iPhone 14 Pro', 'iPhone 14 Plus', 'iPhone 14',
   'iPhone 13 Pro Max', 'iPhone 13 Pro', 'iPhone 13 mini', 'iPhone 13',
@@ -52,7 +56,7 @@ const MODELS = [
   'iPhone 6S', 'iPhone 6', 'AirPods Pro', 'AirPods', 'iPad Air', 'iPad Pro'
 ]
 
-const PAYMENT_METHODS = ['Espèces', 'Carte', 'Virement', 'Chèque']
+const PAYMENT_METHODS = ['Espèces', 'Carte', 'Virement', 'Chèque', 'Espèces + Carte', 'Multi-paiement']
 const TYPES = ['Réparation', 'Vente']
 const STATUSES = ['Terminé', 'En cours', 'En attente']
 
@@ -64,6 +68,7 @@ const emptyForm = {
   service: '',
   price: '',
   cost: '',
+  acompte: '',
   paymentMethod: 'Espèces',
   status: 'Terminé',
   clientPhone: '',
@@ -88,6 +93,8 @@ export default function Ventes() {
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
   const [formErrors, setFormErrors] = useState({})
   const [customService, setCustomService] = useState('')
+  const [unlockType, setUnlockType] = useState('code') // 'code' | 'schema'
+  const [viewPattern, setViewPattern] = useState(null)
 
   // ─── Filter & Sort ───────────────────────────────────────────────
   const filtered = sales
@@ -136,14 +143,21 @@ export default function Ventes() {
     setEditingSale(null)
     setFormErrors({})
     setCustomService('')
+    setUnlockType('code')
     setDialogOpen(true)
   }
 
   const openEdit = (sale) => {
-    setForm({ ...sale, price: String(sale.price), cost: String(sale.cost) })
+    setForm({ 
+      ...sale, 
+      price: String(sale.price), 
+      cost: String(sale.cost),
+      acompte: sale.acompte !== null && sale.acompte !== undefined ? String(sale.acompte) : ''
+    })
     setEditingSale(sale.id)
     setFormErrors({})
     setCustomService(SERVICES.includes(sale.service) ? '' : sale.service)
+    setUnlockType(sale.unlockCode && sale.unlockCode.startsWith('Schéma:') ? 'schema' : 'code')
     setDialogOpen(true)
   }
 
@@ -409,7 +423,19 @@ export default function Ventes() {
                         <TableCell className="text-sm text-muted-foreground">
                           <div>{sale.phone}</div>
                           {sale.imei && <div className="text-[10px] text-primary/70 font-mono">IMEI: {sale.imei}</div>}
-                          {sale.unlockCode && <div className="text-[10px] text-orange-400 font-bold">CODE: {sale.unlockCode}</div>}
+                          {sale.unlockCode && (
+                            sale.unlockCode.startsWith('Schéma:') ? (
+                              <button
+                                onClick={() => setViewPattern(sale.unlockCode)}
+                                className="mt-1 px-2 py-0.5 rounded-md bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 font-bold text-[10px] flex items-center gap-1.5 transition-all border border-orange-500/20 shadow-sm"
+                              >
+                                <Smartphone className="w-3 h-3 text-orange-400" />
+                                Voir Schéma
+                              </button>
+                            ) : (
+                              <div className="text-[10px] text-orange-400 font-bold">CODE: {sale.unlockCode}</div>
+                            )
+                          )}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1.5">
@@ -442,36 +468,36 @@ export default function Ventes() {
                           {sale.clientPhone || '-'}
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center gap-1.5">
                             {sale.status !== 'Terminé' && (
                               <button
                                 onClick={() => updateSale(sale.id, { status: 'Terminé' })}
-                                className="p-1.5 rounded-md hover:bg-green-500/20 text-muted-foreground hover:text-green-400 transition-colors"
+                                className="p-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white transition-all duration-200 border border-emerald-500/20 shadow-sm"
                                 title="Clôturer la vente"
                               >
-                                <CheckCircle className="w-3.5 h-3.5" />
+                                <CheckCircle className="w-4 h-4" />
                               </button>
                             )}
                             <button
                               onClick={() => handleGenerateInvoice(sale)}
-                              className="p-1.5 rounded-md hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
+                              className="p-2 rounded-lg bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground transition-all duration-200 border border-primary/20 shadow-sm"
                               title="Générer Facture"
                             >
-                              <FileText className="w-3.5 h-3.5" />
+                              <FileText className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => openEdit(sale)}
-                              className="p-1.5 rounded-md hover:bg-blue-500/20 text-muted-foreground hover:text-blue-400 transition-colors"
+                              className="p-2 rounded-lg bg-blue-500/10 hover:bg-blue-500 text-blue-400 hover:text-white transition-all duration-200 border border-blue-500/20 shadow-sm"
                               title="Modifier"
                             >
-                              <Edit className="w-3.5 h-3.5" />
+                              <Edit className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => setConfirmDeleteId(sale.id)}
-                              className="p-1.5 rounded-md hover:bg-red-500/20 text-muted-foreground hover:text-red-400 transition-colors"
+                              className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white transition-all duration-200 border border-red-500/20 shadow-sm"
                               title="Supprimer"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         </TableCell>
@@ -590,16 +616,69 @@ export default function Ventes() {
                   onChange={e => handleChange('imei', e.target.value)}
                 />
               </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="unlockCode">Code Déverrouillage</Label>
-                <Input
-                  id="unlockCode"
-                  placeholder="Code ou Schéma"
-                  value={form.unlockCode || ''}
-                  onChange={e => handleChange('unlockCode', e.target.value)}
-                />
+                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Type de code</Label>
+                <div className="flex bg-secondary rounded-lg p-1 border border-border h-10 items-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUnlockType('code');
+                      handleChange('unlockCode', '');
+                    }}
+                    className={cn(
+                      "flex-1 h-full rounded-md text-xs font-bold transition-all",
+                      unlockType === 'code' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    Code
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUnlockType('schema');
+                      handleChange('unlockCode', '');
+                    }}
+                    className={cn(
+                      "flex-1 h-full rounded-md text-xs font-bold transition-all",
+                      unlockType === 'schema' ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    Schéma
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-1.5 flex flex-col justify-end">
+                {unlockType === 'code' ? (
+                  <>
+                    <Label htmlFor="unlockCode">Code Déverrouillage</Label>
+                    <Input
+                      id="unlockCode"
+                      placeholder="Code ou Schéma"
+                      value={form.unlockCode || ''}
+                      onChange={e => handleChange('unlockCode', e.target.value)}
+                    />
+                  </>
+                ) : (
+                  <span className="text-[10px] text-muted-foreground font-medium mb-1.5">
+                    Schéma sélectionné. Dessinez le schéma ci-dessous.
+                  </span>
+                )}
               </div>
             </div>
+
+            {unlockType === 'schema' && (
+              <div className="p-4 bg-secondary/30 rounded-2xl border border-border/40 flex flex-col items-center w-full animate-in fade-in duration-200">
+                <Label className="text-xs font-semibold mb-2 self-start">Dessinez le schéma de déverrouillage</Label>
+                <PatternLock
+                  value={form.unlockCode}
+                  onChange={val => handleChange('unlockCode', val)}
+                  mode="edit"
+                />
+              </div>
+            )}
 
             {/* Service */}
             <div className="space-y-1.5">
@@ -663,7 +742,7 @@ export default function Ventes() {
                   min="0"
                   step="0.01"
                   placeholder="0.00"
-                  value={form.acompte || '0'}
+                  value={form.acompte}
                   onChange={e => handleChange('acompte', e.target.value)}
                 />
               </div>
@@ -736,6 +815,27 @@ export default function Ventes() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Pattern Modal */}
+      <Dialog open={!!viewPattern} onOpenChange={() => setViewPattern(null)}>
+        <DialogContent className="max-w-xs p-6 flex flex-col items-center gap-4">
+          <DialogHeader className="w-full">
+            <DialogTitle className="flex items-center gap-2 text-orange-400">
+              <Smartphone className="w-5 h-5 text-orange-400" />
+              Schéma Déverrouillage
+            </DialogTitle>
+          </DialogHeader>
+          {viewPattern && (
+            <PatternLock
+              value={viewPattern}
+              mode="view"
+            />
+          )}
+          <Button onClick={() => setViewPattern(null)} className="w-full mt-2">
+            Fermer
+          </Button>
         </DialogContent>
       </Dialog>
 

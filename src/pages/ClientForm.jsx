@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Smartphone, CheckCircle, ArrowRight, User, Phone, CreditCard, Euro } from 'lucide-react'
+import PatternLock from '@/components/PatternLock'
+import { cn } from '@/lib/utils'
 
 const PANNES = [
   'Écran cassé',
@@ -19,6 +21,8 @@ const PANNES = [
 ]
 
 const MODELS = [
+  'iPhone 17 Pro Max', 'iPhone 17 Pro', 'iPhone 17',
+  'iPhone 16 Pro Max', 'iPhone 16 Pro', 'iPhone 16 Plus', 'iPhone 16',
   'iPhone 15 Pro Max', 'iPhone 15 Pro', 'iPhone 15 Plus', 'iPhone 15',
   'iPhone 14 Pro Max', 'iPhone 14 Pro', 'iPhone 14 Plus', 'iPhone 14',
   'iPhone 13 Pro Max', 'iPhone 13 Pro', 'iPhone 13 mini', 'iPhone 13',
@@ -41,6 +45,7 @@ export default function ClientForm() {
   const [loading, setLoading] = useState(false)
   const [countdown, setCountdown] = useState(10)
   const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [unlockType, setUnlockType] = useState('code') // 'code' | 'schema'
   
   useEffect(() => {
     let timer;
@@ -68,8 +73,8 @@ export default function ClientForm() {
     secondaryService: '',
     email: '',
     paymentPreference: 'Espèces',
-    price: '0',
-    acompte: '0',
+    price: '',
+    acompte: '',
     notes: '',
     imei: '',
     unlockCode: '',
@@ -121,10 +126,11 @@ export default function ClientForm() {
   }
 
   const reset = () => {
-    setForm({ client: '', clientPhone: '', phone: '', imei: '', unlockCode: '', service: '', paymentPreference: 'Espèces', notes: '', price: '0', acompte: '0' })
+    setForm({ client: '', clientPhone: '', phone: '', imei: '', unlockCode: '', service: '', paymentPreference: 'Espèces', notes: '', price: '', acompte: '' })
     setErrors({})
     setAcceptedTerms(false)
     setSubmitted(false)
+    setUnlockType('code')
   }
 
   if (submitted) {
@@ -248,6 +254,40 @@ export default function ClientForm() {
                     />
                   </div>
                   <div className="space-y-2">
+                    <Label className="text-sm font-bold text-gray-700">Type de code</Label>
+                    <div className="flex bg-gray-50 rounded-2xl p-1 border border-gray-100 h-14 items-center">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUnlockType('code');
+                          setForm(prev => ({ ...prev, unlockCode: '' }));
+                        }}
+                        className={cn(
+                          "flex-1 h-full rounded-xl text-xs font-bold transition-all",
+                          unlockType === 'code' ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"
+                        )}
+                      >
+                        Code
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUnlockType('schema');
+                          setForm(prev => ({ ...prev, unlockCode: '' }));
+                        }}
+                        className={cn(
+                          "flex-1 h-full rounded-xl text-xs font-bold transition-all",
+                          unlockType === 'schema' ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"
+                        )}
+                      >
+                        Schéma
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {unlockType === 'code' ? (
+                  <div className="space-y-2 animate-fade-in">
                     <Label htmlFor="unlockCode" className="text-sm font-bold text-gray-700">Code Déverrouillage</Label>
                     <Input
                       id="unlockCode"
@@ -257,7 +297,16 @@ export default function ClientForm() {
                       className="h-14 rounded-2xl bg-gray-50 border-gray-100 text-lg text-gray-900 focus:ring-blue-500"
                     />
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-2 p-4 bg-gray-50 rounded-3xl border border-gray-100 flex flex-col items-center animate-fade-in w-full">
+                    <Label className="text-sm font-bold text-gray-700 mb-1 self-start">Dessinez votre schéma</Label>
+                    <PatternLock
+                      value={form.unlockCode}
+                      onChange={val => setForm({...form, unlockCode: val})}
+                      mode="edit"
+                    />
+                  </div>
+                )}
                 <div className="space-y-4">
                   <Label className="text-sm font-bold text-gray-700">Type de panne</Label>
                   <p className="text-[10px] text-gray-400 mb-2">Sélectionnez le problème principal :</p>
@@ -347,7 +396,7 @@ export default function ClientForm() {
                     />
                   </div>
                 </div>
-                {parseFloat(form.price) > 0 && (
+                {((parseFloat(form.price) || 0) > 0) && (
                   <div className="mt-4 p-4 rounded-2xl bg-blue-50 border border-blue-100 flex justify-between items-center">
                     <span className="text-sm font-bold text-blue-800">Reste à payer :</span>
                     <span className="text-xl font-black text-blue-900">
