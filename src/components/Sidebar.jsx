@@ -10,7 +10,7 @@ const navItems = [
   { to: '/tarifs', icon: Tags, label: 'Grille Tarifaire', shortLabel: 'Tarifs' },
   { to: '/organisation', icon: Kanban, label: 'Organisation', shortLabel: 'Tickets' },
   { to: '/stock', icon: Package, label: 'Stock', shortLabel: 'Stock' },
-  { to: '/stock-ecran', icon: Smartphone, label: 'Stock Écran', shortLabel: 'Écrans' },
+  { to: '/stock-ecran', icon: Smartphone, label: 'Stock Réparation', shortLabel: 'Pièces' },
 ]
 
 export default function Sidebar() {

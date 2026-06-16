@@ -126,7 +126,7 @@ export default function StockEcran() {
       
     let success = false;
     if (error) {
-      console.error("Erreur de chargement du stock écran:", error);
+      console.error("Erreur de chargement du stock réparation:", error);
       if (error.code === 'PGRST205' || error.message?.includes('stock_ecran')) {
         setDbTableMissing(true);
       }
@@ -288,9 +288,9 @@ export default function StockEcran() {
         <div>
           <h1 className="text-4xl font-extrabold text-foreground tracking-tight flex items-center gap-3">
             <Smartphone className="w-10 h-10 text-primary" />
-            Stock Écran
+            Stock Réparation
           </h1>
-          <p className="text-muted-foreground mt-2 text-lg">Gérez les quantités et les prix pour chaque qualité d'écran d'iPhone</p>
+          <p className="text-muted-foreground mt-2 text-lg">Gérez les quantités et les prix pour chaque pièce de réparation d'iPhone</p>
         </div>
         <button
           onClick={loadStock}
