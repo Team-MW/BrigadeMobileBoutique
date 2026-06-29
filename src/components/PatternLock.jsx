@@ -163,7 +163,11 @@ export default function PatternLock({ value, onChange, mode = 'edit' }) {
           y1={p1.y}
           x2={p2.x}
           y2={p2.y}
-          className="stroke-primary stroke-[8] stroke-linecap-round opacity-80 animate-in fade-in duration-200"
+          stroke="#f97316"
+          strokeWidth="8"
+          strokeLinecap="round"
+          opacity="0.9"
+          className="animate-in fade-in duration-200"
         />
       );
     }
@@ -180,7 +184,11 @@ export default function PatternLock({ value, onChange, mode = 'edit' }) {
           y1={lastDot.y}
           x2={pointerPos.x}
           y2={pointerPos.y}
-          className="stroke-primary/50 stroke-[6] stroke-linecap-round stroke-dasharray-4"
+          stroke="#f97316"
+          strokeWidth="6"
+          strokeLinecap="round"
+          strokeDasharray="4,4"
+          opacity="0.6"
         />
       );
     }
@@ -193,9 +201,10 @@ export default function PatternLock({ value, onChange, mode = 'edit' }) {
           ref={svgRef}
           viewBox="0 0 300 300"
           className={cn(
-            "w-full max-w-[260px] aspect-square touch-none select-none bg-card/60 backdrop-blur-md rounded-3xl border border-border/40 shadow-inner",
+            "w-full max-w-[260px] aspect-square touch-none select-none rounded-3xl border shadow-2xl",
             mode === 'edit' && "cursor-crosshair"
           )}
+          style={{ backgroundColor: '#0f172a', borderColor: '#334155' }}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
@@ -212,38 +221,39 @@ export default function PatternLock({ value, onChange, mode = 'edit' }) {
 
             return (
               <g key={dot.id}>
-                {/* Active Outer Glow */}
-                {isActive && (
-                  <circle
-                    cx={dot.x}
-                    cy={dot.y}
-                    r={24}
-                    className={cn(
-                      "fill-primary/20 animate-pulse duration-1000",
-                      isLast && "fill-emerald-500/20"
-                    )}
-                  />
-                )}
-                {/* Dot Base */}
+                {/* Outer Ring */}
                 <circle
                   cx={dot.x}
                   cy={dot.y}
-                  r={10}
+                  r={isActive ? 22 : 18}
+                  fill={isActive ? (isLast ? "rgba(16, 185, 129, 0.2)" : "rgba(249, 115, 22, 0.2)") : "rgba(255, 255, 255, 0.05)"}
+                  stroke={isActive ? (isLast ? "#10b981" : "#f97316") : "rgba(255, 255, 255, 0.25)"}
+                  strokeWidth={2}
                   className={cn(
-                    "fill-muted-foreground/30 transition-all duration-200",
-                    isActive && "fill-primary scale-110",
-                    isLast && "fill-emerald-500 scale-125"
+                    "transition-all duration-200",
+                    isActive && "animate-pulse"
                   )}
                 />
-                {/* Inner core */}
+                
+                {/* Inner Core */}
+                <circle
+                  cx={dot.x}
+                  cy={dot.y}
+                  r={isActive ? 8 : 6}
+                  fill={isActive ? (isLast ? "#10b981" : "#f97316") : "rgba(255, 255, 255, 0.85)"}
+                  className="transition-all duration-200"
+                />
+
+                {/* Inner core white center for active state */}
                 {isActive && (
                   <circle
                     cx={dot.x}
                     cy={dot.y}
-                    r={4}
-                    className="fill-white"
+                    r={3}
+                    fill="#ffffff"
                   />
                 )}
+
                 {/* Order Badge in view mode to show drawing sequence */}
                 {mode === 'view' && isActive && (
                   <g className="animate-in zoom-in-75 duration-300">

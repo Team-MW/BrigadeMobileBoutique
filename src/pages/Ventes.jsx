@@ -70,7 +70,7 @@ const emptyForm = {
   cost: '',
   acompte: '',
   paymentMethod: 'Espèces',
-  status: 'Terminé',
+  status: 'En attente',
   clientPhone: '',
   notes: '',
   imei: '',
@@ -80,7 +80,14 @@ const emptyForm = {
 export default function Ventes() {
   const { sales, fetchData, addSale, updateSale, deleteSale, addInvoice, loading, isWorking } = useShop()
   const navigate = useNavigate()
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(() => {
+    return localStorage.getItem('sales_search_filter') || '';
+  });
+
+  useEffect(() => {
+    // Clear the filter from storage immediately to prevent it from persisting on reload
+    localStorage.removeItem('sales_search_filter');
+  }, []);
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterType, setFilterType] = useState('all')
   const [sortField, setSortField] = useState('date')

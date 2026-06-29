@@ -168,6 +168,40 @@ export function ShopProvider({ children }) {
         .select()
       
       if (error) throw error
+
+      // Automatically create a ticket in the Organisation Kanban board
+      if (data && data.length > 0) {
+        const newSale = data[0]
+        let ticketStatus = 'A FAIRE'
+        if (newSale.status === 'En cours') ticketStatus = 'EN COURS'
+        else if (newSale.status === 'Terminé') ticketStatus = 'TERMINÉ'
+
+        // Retrieve current maximum position for that status to append to the end of the column
+        const { data: posData } = await supabase
+          .from('repair_tickets')
+          .select('position')
+          .eq('status', ticketStatus)
+          .order('position', { ascending: false })
+          .limit(1)
+
+        const position = (posData && posData.length > 0) ? (posData[0].position + 1) : 0
+
+        const { error: ticketError } = await supabase
+          .from('repair_tickets')
+          .insert([{
+            title: `[${newSale.type.toUpperCase()}] ${newSale.service} - ${newSale.phone}`,
+            client: newSale.client,
+            phone: newSale.clientphone,
+            status: ticketStatus,
+            price: newSale.price,
+            position: position
+          }])
+
+        if (ticketError) {
+          console.error('Error inserting corresponding repair ticket:', ticketError)
+        }
+      }
+
       return (data && data.length > 0) ? data[0] : true
     } catch (error) {
       console.error('Erreur détaillée dans addSale:', error)
