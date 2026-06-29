@@ -241,7 +241,7 @@ export default function StockEcran() {
   };
 
   return (
-    <div className="p-8 max-w-full overflow-x-hidden animate-in fade-in zoom-in-95 duration-500 space-y-6">
+    <div className="p-4 sm:p-8 max-w-full overflow-x-hidden animate-in fade-in zoom-in-95 duration-500 space-y-6">
       {dbTableMissing && (
         <div className="p-5 rounded-2xl border border-amber-500/30 bg-amber-500/5 text-amber-200 space-y-3">
           <div className="flex gap-3 items-start justify-between">
@@ -288,11 +288,11 @@ export default function StockEcran() {
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-extrabold text-foreground tracking-tight flex items-center gap-3">
-            <Smartphone className="w-10 h-10 text-primary" />
+          <h1 className="text-2xl sm:text-4xl font-extrabold text-foreground tracking-tight flex items-center gap-3">
+            <Smartphone className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
             Stock Réparation
           </h1>
-          <p className="text-muted-foreground mt-2 text-lg">Gérez les quantités en stock pour chaque pièce de réparation d'iPhone</p>
+          <p className="text-muted-foreground mt-2 text-sm sm:text-lg">Gérez les quantités en stock pour chaque pièce de réparation d'iPhone</p>
         </div>
         <button
           onClick={loadStock}
@@ -332,11 +332,11 @@ export default function StockEcran() {
           <table className="w-full text-sm text-left border-collapse">
             <thead className="text-xs uppercase bg-secondary text-secondary-foreground">
               <tr>
-                <th scope="col" className="px-6 py-4 font-semibold sticky left-0 z-20 bg-secondary border-r border-border min-w-[200px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">
+                <th scope="col" className="px-3 sm:px-6 py-3 sm:py-4 font-semibold sticky left-0 z-20 bg-secondary border-r border-border min-w-[100px] sm:min-w-[150px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">
                   Modèle
                 </th>
                 {SCREEN_QUALITIES.map(quality => (
-                  <th key={quality} scope="col" className="px-6 py-4 font-semibold text-center whitespace-nowrap min-w-[120px]">
+                  <th key={quality} scope="col" className="px-3 sm:px-6 py-3 sm:py-4 font-semibold text-center whitespace-nowrap min-w-[85px] sm:min-w-[120px]">
                     {quality}
                   </th>
                 ))}
@@ -364,8 +364,8 @@ export default function StockEcran() {
                 return (
                   <tr key={model} className={cn("transition-colors group hover:brightness-110", rowBg)}>
                     <td className={cn(
-                      "px-6 py-3 font-medium text-foreground sticky left-0 z-10 border-r border-border shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]",
-                      rowBg
+                      "px-3 sm:px-6 py-2.5 sm:py-3 font-medium text-foreground sticky left-0 z-10 border-r border-border min-w-[100px] sm:min-w-[150px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]",
+                      idx % 2 === 0 ? "bg-card" : "bg-muted"
                     )}>
                       {model}
                     </td>
@@ -374,15 +374,15 @@ export default function StockEcran() {
                       const itemData = stock[key] || { quantity: 0, price: 0 };
                       
                       return (
-                        <td key={quality} className="px-4 py-3 border-r border-border/20 last:border-r-0 min-w-[120px]">
-                          <div className="flex justify-center bg-background/30 p-1.5 rounded-xl border border-border/10 group/cell hover:border-primary/30 hover:bg-background/50 transition-all">
+                        <td key={quality} className="px-1.5 sm:px-4 py-2 sm:py-3 border-r border-border/20 last:border-r-0 min-w-[85px] sm:min-w-[120px]">
+                          <div className="flex justify-center bg-background/30 p-1 sm:p-1.5 rounded-xl border border-border/10 group/cell hover:border-primary/30 hover:bg-background/50 transition-all">
                             <input
                               type="number"
                               min="0"
                               value={itemData.quantity || ''}
                               onChange={(e) => handleCellChange(model, quality, 'quantity', e.target.value)}
                               className={cn(
-                                "w-full max-w-[80px] px-2 py-1 text-center font-bold bg-secondary/50 rounded-lg border border-transparent focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm",
+                                "w-full max-w-[65px] sm:max-w-[80px] px-1.5 sm:px-2 py-0.5 sm:py-1 text-center font-bold bg-secondary/50 rounded-lg border border-transparent focus:border-primary focus:ring-1 focus:ring-primary transition-all text-xs sm:text-sm",
                                 (itemData.quantity || 0) <= 0 ? "text-destructive/80" :
                                 (itemData.quantity || 0) <= 5 ? "text-amber-500" :
                                 "text-emerald-500"
