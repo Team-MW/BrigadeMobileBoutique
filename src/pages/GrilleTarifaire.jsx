@@ -96,7 +96,7 @@ export default function GrilleTarifaire() {
             <thead className="text-xs uppercase bg-secondary text-secondary-foreground">
               <tr>
                 <th scope="col" className="px-6 py-4 font-semibold sticky left-0 z-20 bg-secondary border-r border-border min-w-[200px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">
-                  Modèle d'iPhone
+                  Modèle
                 </th>
                 {REPAIRS.map(repair => (
                   <th key={repair} scope="col" className="px-6 py-4 font-semibold text-center whitespace-nowrap min-w-[150px]">

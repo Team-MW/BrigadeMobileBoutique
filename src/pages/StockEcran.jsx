@@ -292,7 +292,7 @@ export default function StockEcran() {
             <Smartphone className="w-10 h-10 text-primary" />
             Stock Réparation
           </h1>
-          <p className="text-muted-foreground mt-2 text-lg">Gérez les quantités et les prix pour chaque pièce de réparation d'iPhone</p>
+          <p className="text-muted-foreground mt-2 text-lg">Gérez les quantités en stock pour chaque pièce de réparation d'iPhone</p>
         </div>
         <button
           onClick={loadStock}
@@ -312,7 +312,7 @@ export default function StockEcran() {
         </span>
         <input
           type="text"
-          placeholder="Rechercher un modèle d'iPhone..."
+          placeholder="Rechercher un modèle..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full pl-9 pr-4 py-2.5 bg-card/50 backdrop-blur-sm rounded-xl border border-border focus:border-primary focus:ring-1 focus:ring-primary text-sm font-medium text-foreground transition-all"
@@ -333,10 +333,10 @@ export default function StockEcran() {
             <thead className="text-xs uppercase bg-secondary text-secondary-foreground">
               <tr>
                 <th scope="col" className="px-6 py-4 font-semibold sticky left-0 z-20 bg-secondary border-r border-border min-w-[200px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">
-                  Modèle d'iPhone
+                  Modèle
                 </th>
                 {SCREEN_QUALITIES.map(quality => (
-                  <th key={quality} scope="col" className="px-6 py-4 font-semibold text-center whitespace-nowrap min-w-[170px]">
+                  <th key={quality} scope="col" className="px-6 py-4 font-semibold text-center whitespace-nowrap min-w-[120px]">
                     {quality}
                   </th>
                 ))}
@@ -355,7 +355,7 @@ export default function StockEcran() {
               ) : filteredModels.length === 0 ? (
                 <tr>
                   <td colSpan={SCREEN_QUALITIES.length + 1} className="px-6 py-12 text-center text-muted-foreground font-medium">
-                    Aucun modèle d'iPhone trouvé pour "{searchQuery}".
+                    Aucun modèle trouvé pour "{searchQuery}".
                   </td>
                 </tr>
               ) : filteredModels.map((model, idx) => {
@@ -374,43 +374,21 @@ export default function StockEcran() {
                       const itemData = stock[key] || { quantity: 0, price: 0 };
                       
                       return (
-                        <td key={quality} className="px-4 py-3 border-r border-border/20 last:border-r-0 min-w-[170px]">
-                          <div className="flex flex-col gap-2 bg-background/30 p-2 rounded-xl border border-border/10 group/cell hover:border-primary/30 hover:bg-background/50 transition-all">
-                            {/* Quantity Row */}
-                            <div className="flex items-center justify-between gap-1.5">
-                              <span className="text-[10px] font-extrabold text-muted-foreground/60 tracking-wider uppercase">Qté</span>
-                              <input
-                                type="number"
-                                min="0"
-                                value={itemData.quantity || ''}
-                                onChange={(e) => handleCellChange(model, quality, 'quantity', e.target.value)}
-                                className={cn(
-                                  "w-20 px-2 py-1 text-center font-bold bg-secondary/50 rounded-lg border border-transparent focus:border-primary focus:ring-1 focus:ring-primary transition-all text-xs",
-                                  (itemData.quantity || 0) <= 0 ? "text-destructive/80" :
-                                  (itemData.quantity || 0) <= 5 ? "text-amber-500" :
-                                  "text-emerald-500"
-                                )}
-                                placeholder="0"
-                              />
-                            </div>
-                            {/* Price Row */}
-                            <div className="flex items-center justify-between gap-1.5">
-                              <span className="text-[10px] font-extrabold text-muted-foreground/60 tracking-wider uppercase">Prix</span>
-                              <div className="relative flex items-center font-semibold text-foreground/90">
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  min="0"
-                                  value={itemData.price || ''}
-                                  onChange={(e) => handleCellChange(model, quality, 'price', e.target.value)}
-                                  className="w-20 px-2 py-1 text-center bg-secondary/50 rounded-lg border border-transparent focus:border-primary focus:ring-1 focus:ring-primary transition-all text-xs pr-4"
-                                  placeholder="0.00"
-                                />
-                                <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground pointer-events-none">
-                                  €
-                                </span>
-                              </div>
-                            </div>
+                        <td key={quality} className="px-4 py-3 border-r border-border/20 last:border-r-0 min-w-[120px]">
+                          <div className="flex justify-center bg-background/30 p-1.5 rounded-xl border border-border/10 group/cell hover:border-primary/30 hover:bg-background/50 transition-all">
+                            <input
+                              type="number"
+                              min="0"
+                              value={itemData.quantity || ''}
+                              onChange={(e) => handleCellChange(model, quality, 'quantity', e.target.value)}
+                              className={cn(
+                                "w-full max-w-[80px] px-2 py-1 text-center font-bold bg-secondary/50 rounded-lg border border-transparent focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm",
+                                (itemData.quantity || 0) <= 0 ? "text-destructive/80" :
+                                (itemData.quantity || 0) <= 5 ? "text-amber-500" :
+                                "text-emerald-500"
+                              )}
+                              placeholder="0"
+                            />
                           </div>
                         </td>
                       );

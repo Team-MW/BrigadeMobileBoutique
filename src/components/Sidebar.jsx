@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, ShoppingCart, Smartphone, TrendingUp, Settings, Menu, X, FileText, Tags, Kanban, Package } from 'lucide-react'
+import { LayoutDashboard, ShoppingCart, Smartphone, TrendingUp, Settings, Menu, X, FileText, Tags, Kanban, Package, MoreHorizontal } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -15,21 +15,27 @@ const navItems = [
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  const mobileVisibleItems = [
+    { to: '/', icon: LayoutDashboard, shortLabel: 'Accueil' },
+    { to: '/ventes', icon: ShoppingCart, shortLabel: 'Ventes' },
+    { to: '/organisation', icon: Kanban, shortLabel: 'Tickets' },
+    { to: '/stock-ecran', icon: Smartphone, shortLabel: 'Pièces' },
+  ]
 
   return (
     <>
       {/* --- MOBILE BOTTOM NAVIGATION --- */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-sidebar border-t border-sidebar-border flex items-center justify-around px-1 py-2 pb-safe shadow-[0_-4px_15px_-3px_rgba(0,0,0,0.1)]">
-        {navItems
-          .filter(item => item.to !== '/stock' && item.to !== '/stock-ecran')
-          .map(({ to, icon: Icon, shortLabel }) => (
+        {mobileVisibleItems.map(({ to, icon: Icon, shortLabel }) => (
           <NavLink
             key={to}
             to={to}
             end={to === '/'}
             className={({ isActive }) =>
               cn(
-                "flex flex-col items-center gap-1 p-1.5 rounded-xl transition-all duration-200 min-w-[4rem]",
+                "flex flex-col items-center gap-1 p-1.5 rounded-xl transition-all duration-200 min-w-[3.5rem]",
                 isActive
                   ? "text-sidebar-primary scale-110"
                   : "text-sidebar-foreground/50 hover:text-sidebar-foreground hover:scale-105"
@@ -40,7 +46,85 @@ export default function Sidebar() {
             <span className="text-[10px] font-bold tracking-wider uppercase">{shortLabel}</span>
           </NavLink>
         ))}
+        <button
+          onClick={() => setMobileMenuOpen(true)}
+          className={cn(
+            "flex flex-col items-center gap-1 p-1.5 rounded-xl transition-all duration-200 min-w-[3.5rem]",
+            mobileMenuOpen
+              ? "text-sidebar-primary scale-110"
+              : "text-sidebar-foreground/50 hover:text-sidebar-foreground hover:scale-105"
+          )}
+        >
+          <MoreHorizontal className="w-5 h-5" />
+          <span className="text-[10px] font-bold tracking-wider uppercase">Plus</span>
+        </button>
       </nav>
+
+      {/* --- MOBILE MENU BOTTOM SHEET --- */}
+      {mobileMenuOpen && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 animate-fade-in"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          {/* Slide-up sheet */}
+          <div className="md:hidden fixed bottom-0 left-0 right-0 bg-sidebar border-t border-sidebar-border rounded-t-3xl p-6 pb-8 z-50 shadow-2xl animate-fade-in">
+            {/* Grab handle */}
+            <div className="w-12 h-1 bg-sidebar-foreground/20 rounded-full mx-auto mb-6" />
+            
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-extrabold text-sidebar-foreground">Menu</h3>
+              <button 
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-1.5 rounded-lg bg-sidebar-accent hover:brightness-110 text-sidebar-foreground transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Grid of menu items */}
+            <div className="grid grid-cols-2 gap-3">
+              {navItems.map(({ to, icon: Icon, label }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  end={to === '/'}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center gap-3 p-3 rounded-xl transition-all duration-200 border",
+                      isActive
+                        ? "bg-sidebar-primary border-sidebar-primary/20 text-sidebar-primary-foreground shadow-md shadow-primary/20"
+                        : "bg-sidebar-accent/50 border-sidebar-border/30 text-sidebar-foreground hover:bg-sidebar-accent"
+                    )
+                  }
+                >
+                  <Icon className="w-5 h-5 shrink-0" />
+                  <span className="text-xs font-bold">{label}</span>
+                </NavLink>
+              ))}
+              
+              {/* Dépôt Client Link in the grid */}
+              <NavLink
+                to="/depot"
+                onClick={() => setMobileMenuOpen(false)}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center gap-3 p-3 rounded-xl transition-all duration-200 border col-span-2 mt-2",
+                    isActive
+                      ? "bg-primary border-primary text-primary-foreground shadow-md shadow-primary/20"
+                      : "bg-primary/5 border-primary/20 text-foreground hover:bg-primary/10"
+                  )
+                }
+              >
+                <Smartphone className="w-5 h-5 shrink-0 text-primary" />
+                <span className="text-xs font-bold">Dépôt Client</span>
+              </NavLink>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* --- DESKTOP SIDEBAR --- */}
       <aside
