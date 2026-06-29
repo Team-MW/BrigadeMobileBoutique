@@ -15,10 +15,12 @@ import { useNavigate } from 'react-router-dom'
 import {
   Plus, Search, Filter, Edit, Trash2, Wrench, ShoppingBag,
   CheckCircle, Clock, AlertCircle, Download, ChevronUp, ChevronDown,
-  X, Euro, TrendingUp, FileText, RefreshCw, Smartphone
+  X, Euro, TrendingUp, FileText, RefreshCw, Smartphone, Printer
 } from 'lucide-react'
 import PatternLock from '@/components/PatternLock'
 import { cn } from '@/lib/utils'
+import html2canvas from 'html2canvas-pro'
+import { jsPDF } from 'jspdf'
 
 const STATUS_CONFIG = {
   'Terminé': { badge: 'success', icon: CheckCircle, color: 'text-green-400' },
@@ -102,6 +104,137 @@ export default function Ventes() {
   const [customService, setCustomService] = useState('')
   const [unlockType, setUnlockType] = useState('code') // 'code' | 'schema'
   const [viewPattern, setViewPattern] = useState(null)
+
+  const generateReceiptPDF = async (sale) => {
+    const container = document.createElement('div')
+    container.style.position = 'absolute'
+    container.style.left = '-9999px'
+    container.style.top = '-9999px'
+    
+    // Fallback to form state if sale object is incomplete
+    const activeSale = (sale && typeof sale === 'object' && sale.client) ? sale : { ...form, service: form.service === 'Autre' ? customService : form.service }
+    
+    const clientPhone = activeSale.clientphone || activeSale.clientPhone || ''
+    const unlockCode = activeSale.unlock_code || activeSale.unlockCode || ''
+    const formattedDate = new Date(activeSale.date || Date.now()).toLocaleDateString('fr-FR')
+    const receiptNo = activeSale.id ? (String(activeSale.id).includes('-') ? `BM-${String(activeSale.id).split('-')[0].toUpperCase()}` : String(activeSale.id)) : 'PROVISOIRE'
+    const totalTTC = parseFloat(activeSale.price || 0).toFixed(2)
+    const acompteVal = parseFloat(activeSale.acompte || 0)
+    const resteVal = parseFloat(activeSale.price || 0) - acompteVal
+    
+    let paymentStatusHTML = ''
+    if (resteVal <= 0) {
+      paymentStatusHTML = `
+        <div style="text-align: center; margin-top: 6px; padding: 6px; background-color: #d1e7dd; border: 1px solid #badbcc; border-radius: 4px; font-weight: bold; color: #0f5132; font-size: 10px;">
+          RÈGLEMENT TOTAL EFFECTUÉ
+        </div>
+      `
+    } else if (acompteVal > 0) {
+      paymentStatusHTML = `
+        <div style="display: flex; justify-content: space-between; margin: 2px 0;">
+          <span>Acompte déposé :</span>
+          <span>-${acompteVal.toFixed(2)} €</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin: 4px 0 0 0; font-size: 11px; font-weight: 900; border-top: 1px dashed #000; padding-top: 4px;">
+          <span>RESTE À PAYER :</span>
+          <span>${resteVal.toFixed(2)} €</span>
+        </div>
+      `
+    } else {
+      paymentStatusHTML = `
+        <div style="display: flex; justify-content: space-between; margin: 4px 0 0 0; font-size: 11px; font-weight: 900; border-top: 1px dashed #000; padding-top: 4px;">
+          <span>RESTE À PAYER :</span>
+          <span>${resteVal.toFixed(2)} €</span>
+        </div>
+      `
+    }
+
+    container.innerHTML = `
+      <div style="width: 280px; padding: 15px; background: white; color: black; font-family: 'Inter', sans-serif; font-size: 11px; line-height: 1.4;">
+        <div style="text-align: center; margin-bottom: 12px;">
+          <h1 style="font-size: 15px; font-weight: 900; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">BRIGADE MOBILE</h1>
+          <p style="font-size: 8px; color: #4b5563; margin: 2px 0 0 0;">65 route de Blagnac, 31200 Toulouse</p>
+          <p style="font-size: 8px; color: #4b5563; margin: 1px 0 0 0;">Tél: 05 xx xx xx xx</p>
+        </div>
+        
+        <div style="border-top: 1px dashed #000; margin: 8px 0;"></div>
+        
+        <div style="text-align: center; margin-bottom: 8px;">
+          <h2 style="font-size: 10px; font-weight: 900; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">
+            FICHE ${activeSale.type === 'Vente' ? 'VENTE' : 'RÉPARATION'}
+          </h2>
+          <p style="font-size: 9px; font-weight: bold; margin: 2px 0 0 0; font-family: monospace;">
+            N°: ${receiptNo}
+          </p>
+          <p style="font-size: 8px; color: #4b5563; margin: 1px 0 0 0;">
+            Date de dépôt: ${formattedDate}
+          </p>
+        </div>
+        
+        <div style="border-top: 1px dashed #000; margin: 8px 0;"></div>
+        
+        <div style="margin-bottom: 8px;">
+          <p style="margin: 2px 0;"><strong>Client:</strong> ${activeSale.client || 'Client'}</p>
+          ${clientPhone ? `<p style="margin: 2px 0;"><strong>Tél:</strong> ${clientPhone}</p>` : ''}
+        </div>
+        
+        <div style="border-top: 1px dashed #000; margin: 8px 0;"></div>
+        
+        <div style="margin-bottom: 8px;">
+          <p style="margin: 2px 0;"><strong>Appareil:</strong> ${activeSale.phone || 'Non spécifié'}</p>
+          ${activeSale.imei ? `<p style="margin: 2px 0; font-family: monospace;"><strong>IMEI:</strong> ${activeSale.imei}</p>` : ''}
+          ${unlockCode ? `<p style="margin: 2px 0;"><strong>Déverrouillage:</strong> ${unlockCode}</p>` : ''}
+        </div>
+        
+        <div style="border-top: 1px dashed #000; margin: 8px 0;"></div>
+        
+        <div style="margin-bottom: 12px;">
+          <p style="font-weight: bold; margin: 3px 0;">Service :</p>
+          <p style="margin: 2px 0; padding-left: 5px;">${activeSale.service}</p>
+          ${activeSale.notes ? `<p style="font-size: 9px; color: #4b5563; font-style: italic; margin: 4px 0; padding-left: 5px;">Notes: ${activeSale.notes}</p>` : ''}
+        </div>
+        
+        <div style="border-top: 1px dashed #000; margin: 8px 0;"></div>
+        
+        <div style="margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; margin: 2px 0;">
+            <span>Total TTC :</span>
+            <strong>${totalTTC} €</strong>
+          </div>
+          ${paymentStatusHTML}
+        </div>
+        
+        <div style="border-top: 1px dashed #000; margin: 8px 0;"></div>
+        
+        <div style="text-align: center; font-size: 8px; color: #4b5563; margin-top: 12px; line-height: 1.3;">
+          <p style="margin: 1px 0; font-weight: bold;">Merci de votre confiance !</p>
+          <p style="margin: 1px 0;">Garantie 3 mois hors casse et oxydation.</p>
+        </div>
+      </div>
+    `
+    
+    document.body.appendChild(container)
+    
+    try {
+      const canvas = await html2canvas(container.firstElementChild, {
+        scale: 3,
+        backgroundColor: '#ffffff',
+        logging: false
+      })
+      
+      const imgData = canvas.toDataURL('image/png')
+      const pdfWidth = 80
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width
+      
+      const pdf = new jsPDF('p', 'mm', [pdfWidth, pdfHeight])
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
+      pdf.save(`fiche_vente_${receiptNo}.pdf`)
+    } catch (err) {
+      console.error('Error generating receipt PDF:', err)
+    } finally {
+      document.body.removeChild(container)
+    }
+  }
 
   // ─── Filter & Sort ───────────────────────────────────────────────
   const filtered = sales
@@ -193,6 +326,7 @@ export default function Ventes() {
       const result = await addSale(saleData)
       if (result) {
         setDialogOpen(false)
+        generateReceiptPDF(result)
       } else {
         alert("Erreur lors de l'enregistrement de la vente. Veuillez vérifier votre connexion.")
       }
@@ -491,6 +625,13 @@ export default function Ventes() {
                               title="Générer Facture"
                             >
                               <FileText className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => generateReceiptPDF(sale)}
+                              className="p-2 rounded-lg bg-orange-500/10 hover:bg-orange-500 text-orange-400 hover:text-white transition-all duration-200 border border-orange-500/20 shadow-sm"
+                              title="Télécharger Fiche Vente (Ticket)"
+                            >
+                              <Printer className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => openEdit(sale)}
