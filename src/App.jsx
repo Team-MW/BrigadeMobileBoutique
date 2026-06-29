@@ -1,6 +1,8 @@
+import React, { useState } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { ShopProvider } from './context/ShopContext'
 import Sidebar from './components/Sidebar'
+import LockScreen from './components/LockScreen'
 import Dashboard from './pages/Dashboard'
 import Ventes from './pages/Ventes'
 import Factures from './pages/Factures'
@@ -15,10 +17,34 @@ import './index.css'
 function Layout({ children }) {
   const location = useLocation()
   const isClientMode = location.pathname === '/depot'
+  const [unlocked, setUnlocked] = useState(() => {
+    return sessionStorage.getItem('site_unlocked') === 'true'
+  })
+
+  // Client deposit form is fully open without code prompts
+  if (isClientMode) {
+    return (
+      <div className="flex min-h-screen bg-background pb-16 md:pb-0">
+        <div className="flex-1 flex flex-col min-w-0">
+          {children}
+        </div>
+      </div>
+    )
+  }
+
+  // Admin lock screen gate
+  if (!unlocked) {
+    return (
+      <LockScreen onUnlock={() => {
+        sessionStorage.setItem('site_unlocked', 'true')
+        setUnlocked(true)
+      }} />
+    )
+  }
 
   return (
     <div className="flex min-h-screen bg-background pb-16 md:pb-0">
-      {!isClientMode && <Sidebar />}
+      <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
         {children}
       </div>
