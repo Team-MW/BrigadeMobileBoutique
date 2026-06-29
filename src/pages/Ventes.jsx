@@ -46,16 +46,16 @@ const SERVICES = [
 ]
 
 const MODELS = [
-  'iPhone 17 Pro Max', 'iPhone 17 Pro', 'iPhone 17',
-  'iPhone 16 Pro Max', 'iPhone 16 Pro', 'iPhone 16 Plus', 'iPhone 16',
-  'iPhone 15 Pro Max', 'iPhone 15 Pro', 'iPhone 15 Plus', 'iPhone 15',
-  'iPhone 14 Pro Max', 'iPhone 14 Pro', 'iPhone 14 Plus', 'iPhone 14',
-  'iPhone 13 Pro Max', 'iPhone 13 Pro', 'iPhone 13 mini', 'iPhone 13',
-  'iPhone 12 Pro Max', 'iPhone 12 Pro', 'iPhone 12 mini', 'iPhone 12',
-  'iPhone 11 Pro Max', 'iPhone 11 Pro', 'iPhone 11',
-  'iPhone XR', 'iPhone XS Max', 'iPhone XS', 'iPhone X',
-  'iPhone 8 Plus', 'iPhone 8', 'iPhone 7 Plus', 'iPhone 7',
-  'iPhone 6S', 'iPhone 6', 'AirPods Pro', 'AirPods', 'iPad Air', 'iPad Pro'
+  'IP17PM', 'IP17P', 'IP17',
+  'IP16PM', 'IP16P', 'IP16+', 'IP16',
+  'IP15PM', 'IP15P', 'IP15+', 'IP15',
+  'IP14PM', 'IP14P', 'IP14+', 'IP14',
+  'IP13PM', 'IP13P', 'IP13 mini', 'IP13',
+  'IP12PM', 'IP12P', 'IP12 mini', 'IP12',
+  'IP11PM', 'IP11P', 'IP11',
+  'IPXR', 'IPXS Max', 'IPXS', 'IPX',
+  'IP8+', 'IP8', 'IP7+', 'IP7',
+  'IP6S', 'IP6', 'AirPods Pro', 'AirPods', 'iPad Air', 'iPad Pro'
 ]
 
 const PAYMENT_METHODS = ['Espèces', 'Carte', 'Virement', 'Chèque', 'Espèces + Carte', 'Multi-paiement']

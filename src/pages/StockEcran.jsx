@@ -21,17 +21,16 @@ CREATE POLICY "Autoriser tout sur stock_ecran" ON public.stock_ecran AS PERMISSI
 
 -- Recharge le cache interne de l'API Supabase
 NOTIFY pgrst, 'reload schema';`;
-
 const IPHONE_MODELS = [
-  "iPhone 17 Pro Max", "iPhone 17 Pro", "iPhone 17",
-  "iPhone 16 Pro Max", "iPhone 16 Pro", "iPhone 16 Plus", "iPhone 16",
-  "iPhone 15 Pro Max", "iPhone 15 Pro", "iPhone 15 Plus", "iPhone 15",
-  "iPhone 14 Pro Max", "iPhone 14 Pro", "iPhone 14 Plus", "iPhone 14",
-  "iPhone 13 Pro Max", "iPhone 13 Pro", "iPhone 13", "iPhone 13 mini",
-  "iPhone 12 Pro Max", "iPhone 12 Pro", "iPhone 12", "iPhone 12 mini",
-  "iPhone 11 Pro Max", "iPhone 11 Pro", "iPhone 11",
-  "iPhone XS Max", "iPhone XS", "iPhone XR", "iPhone X",
-  "iPhone 8 Plus", "iPhone 8", "iPhone 7 Plus", "iPhone 7", "iPhone SE"
+  "IP17PM", "IP17P", "IP17",
+  "IP16PM", "IP16P", "IP16+", "IP16",
+  "IP15PM", "IP15P", "IP15+", "IP15",
+  "IP14PM", "IP14P", "IP14+", "IP14",
+  "IP13PM", "IP13P", "IP13", "IP13 mini",
+  "IP12PM", "IP12P", "IP12", "IP12 mini",
+  "IP11PM", "IP11P", "IP11",
+  "IPXS Max", "IPXS", "IPXR", "IPX",
+  "IP8+", "IP8", "IP7+", "IP7", "IPSE"
 ];
 
 const SCREEN_QUALITIES = ["OLED", "SPARK", "Écran", "Batterie"];
@@ -41,64 +40,67 @@ const normalizeModelName = (name) => {
   let n = name.toUpperCase().replace(/\s+/g, "");
   
   // IP 17 series
-  if (n.includes("17PROMAX") || n.includes("17PM")) return "iPhone 17 Pro Max";
-  if (n.includes("17PRO") || n.includes("17P")) return "iPhone 17 Pro";
-  if (n.includes("17PLUS")) return "iPhone 17 Plus";
-  if (n === "IP17" || n === "IPHONE17") return "iPhone 17";
+  if (n.includes("17PROMAX") || n.includes("17PM")) return "IP17PM";
+  if (n.includes("17PRO") || n.includes("17P")) return "IP17P";
+  if (n.includes("17PLUS")) return "IP17+";
+  if (n === "IP17" || n === "IPHONE17") return "IP17";
   
   // IP 16 series
-  if (n.includes("16PROMAX") || n.includes("16PM")) return "iPhone 16 Pro Max";
-  if (n.includes("16PRO") || n.includes("16P")) return "iPhone 16 Pro";
-  if (n.includes("16PLUS")) return "iPhone 16 Plus";
-  if (n === "IP16" || n === "IPHONE16" || n === "16") return "iPhone 16";
+  if (n.includes("16PROMAX") || n.includes("16PM")) return "IP16PM";
+  if (n.includes("16PRO") || n.includes("16P")) return "IP16P";
+  if (n.includes("16PLUS")) return "IP16+";
+  if (n === "IP16" || n === "IPHONE16" || n === "16") return "IP16";
   
   // IP 15 series
-  if (n.includes("15PROMAX") || n.includes("15PM") || n === "15PM") return "iPhone 15 Pro Max";
-  if (n.includes("15PRO") || n.includes("15P")) return "iPhone 15 Pro";
-  if (n.includes("15PLUS")) return "iPhone 15 Plus";
-  if (n === "IP15" || n === "IPHONE15" || n === "15") return "iPhone 15";
+  if (n.includes("15PROMAX") || n.includes("15PM") || n === "15PM") return "IP15PM";
+  if (n.includes("15PRO") || n.includes("15P")) return "IP15P";
+  if (n.includes("15PLUS")) return "IP15+";
+  if (n === "IP15" || n === "IPHONE15" || n === "15") return "IP15";
   
   // IP 14 series
-  if (n.includes("14PROMAX") || n.includes("14PM") || n === "14PM") return "iPhone 14 Pro Max";
-  if (n.includes("14PRO") || n.includes("14P")) return "iPhone 14 Pro";
-  if (n.includes("14PLUS")) return "iPhone 14 Plus";
-  if (n === "IP14" || n === "IPHONE14" || n === "14") return "iPhone 14";
+  if (n.includes("14PROMAX") || n.includes("14PM") || n === "14PM") return "IP14PM";
+  if (n.includes("14PRO") || n.includes("14P")) return "IP14P";
+  if (n.includes("14PLUS")) return "IP14+";
+  if (n === "IP14" || n === "IPHONE14" || n === "14") return "IP14";
   
   // IP 13 series
-  if (n.includes("13PROMAX") || n.includes("13PM") || n === "13PM") return "iPhone 13 Pro Max";
-  if (n.includes("13PRO") || n.includes("13P")) return "iPhone 13 Pro";
-  if (n.includes("13MINI")) return "iPhone 13 mini";
-  if (n === "IP13" || n === "IPHONE13" || n === "13") return "iPhone 13";
+  if (n.includes("13PROMAX") || n.includes("13PM") || n === "13PM") return "IP13PM";
+  if (n.includes("13PRO") || n.includes("13P")) return "IP13P";
+  if (n.includes("13MINI")) return "IP13 mini";
+  if (n === "IP13" || n === "IPHONE13" || n === "13") return "IP13";
   
   // IP 12 series
-  if (n.includes("12PROMAX") || n.includes("12PM") || n === "12PM") return "iPhone 12 Pro Max";
-  if (n.includes("12PRO") || n.includes("12P")) return "iPhone 12 Pro";
-  if (n.includes("12MINI")) return "iPhone 12 mini";
-  if (n === "IP12" || n === "IPHONE12" || n === "12") return "iPhone 12";
+  if (n.includes("12PROMAX") || n.includes("12PM") || n === "12PM") return "IP12PM";
+  if (n.includes("12PRO") || n.includes("12P")) return "IP12P";
+  if (n.includes("12MINI")) return "IP12 mini";
+  if (n === "IP12" || n === "IPHONE12" || n === "12") return "IP12";
   
   // IP 11 series
-  if (n.includes("11PROMAX") || n.includes("11PM") || n === "11PM") return "iPhone 11 Pro Max";
-  if (n.includes("11PRO") || n.includes("11P")) return "iPhone 11 Pro";
-  if (n === "IP11" || n === "IPHONE11" || n === "11") return "iPhone 11";
+  if (n.includes("11PROMAX") || n.includes("11PM") || n === "11PM") return "IP11PM";
+  if (n.includes("11PRO") || n.includes("11P")) return "IP11P";
+  if (n === "IP11" || n === "IPHONE11" || n === "11") return "IP11";
   
   // Older series
-  if (n.includes("XSMAX")) return "iPhone XS Max";
-  if (n.includes("XS")) return "iPhone XS";
-  if (n.includes("XR")) return "iPhone XR";
-  if (n === "IPX" || n === "IPHONEX" || n === "X") return "iPhone X";
+  if (n.includes("XSMAX")) return "IPXS Max";
+  if (n.includes("XS")) return "IPXS";
+  if (n.includes("XR")) return "IPXR";
+  if (n === "IPX" || n === "IPHONEX" || n === "X") return "IPX";
   
-  if (n.includes("8PLUS") || n.includes("8P")) return "iPhone 8 Plus";
-  if (n === "IP8" || n === "IPHONE8" || n === "8") return "iPhone 8";
+  if (n.includes("8PLUS") || n.includes("8P")) return "IP8+";
+  if (n === "IP8" || n === "IPHONE8" || n === "8") return "IP8";
   
-  if (n.includes("7PLUS") || n.includes("7P")) return "iPhone 7 Plus";
-  if (n === "IP7" || n === "IPHONE7" || n === "7") return "iPhone 7";
+  if (n.includes("7PLUS") || n.includes("7P")) return "IP7+";
+  if (n === "IP7" || n === "IPHONE7" || n === "7") return "IP7";
   
-  if (n.includes("SE")) return "iPhone SE";
+  if (n.includes("SE")) return "IPSE";
   
   // Default fallback formatting
   let cleanName = name.trim();
+  if (cleanName.startsWith("iPhone ")) {
+    return cleanName.replace(/^iPhone\s*/i, "IP");
+  }
   if (cleanName.startsWith("IP ") || cleanName.startsWith("IP")) {
-    return cleanName.replace(/^IP\s*/i, "iPhone ");
+    return cleanName.replace(/^IP\s*/i, "IP");
   }
   return cleanName;
 };
