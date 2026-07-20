@@ -18,7 +18,7 @@ const IPHONE_MODELS = [
 
 const REPAIRS = [
   "OLED", "LCD", "ORIGINAL", "Batterie", "Caméra Arrière", "Caméra Avant",
-  "Connecteur Charge", "Vitre Arrière", "Micro/Haut-parleur"
+  "Connecteur Charge", "Vitre Arrière", "Châssis", "Micro/Haut-parleur"
 ];
 
 export default function GrilleTarifaire() {
