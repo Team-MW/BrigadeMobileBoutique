@@ -35,6 +35,11 @@ const IPHONE_MODELS = [
 
 const SCREEN_QUALITIES = ["OLED", "LCD", "ORIGINAL", "Batterie"];
 
+const getSharedModelKey = (model, quality) => {
+  if ((model === 'IP12' || model === 'IP12P') && quality !== 'Batterie') return 'IP12/12P';
+  return model;
+};
+
 const normalizeModelName = (name) => {
   if (!name) return "";
   let n = name.toUpperCase().replace(/\s+/g, "");
@@ -153,7 +158,8 @@ export default function StockEcran() {
           quality = 'ORIGINAL';
         }
 
-        const key = `${normalizedModel}-${quality}`;
+        const sharedModelKey = getSharedModelKey(normalizedModel, quality);
+        const key = `${sharedModelKey}-${quality}`;
         // Resolve duplicates by keeping the higher quantity
         if (loaded[key]) {
           if ((item.quantity || 0) > (loaded[key].quantity || 0)) {
@@ -180,7 +186,8 @@ export default function StockEcran() {
   };
 
   const handleCellChange = async (model, quality, field, value) => {
-    const key = `${model}-${quality}`;
+    const sharedModelKey = getSharedModelKey(model, quality);
+    const key = `${sharedModelKey}-${quality}`;
     const numericValue = value === '' ? 0 : parseFloat(value);
     
     // Update local state first
@@ -214,7 +221,7 @@ export default function StockEcran() {
       const { data, error } = await supabase
         .from('stock_ecran')
         .insert([{
-          name: model,
+          name: sharedModelKey,
           category: quality,
           quantity: updatedQty,
           price: updatedPrice
@@ -373,7 +380,8 @@ export default function StockEcran() {
                       {model}
                     </td>
                     {SCREEN_QUALITIES.map(quality => {
-                      const key = `${model}-${quality}`;
+                      const sharedModelKey = getSharedModelKey(model, quality);
+                      const key = `${sharedModelKey}-${quality}`;
                       const itemData = stock[key] || { quantity: 0, price: 0 };
                       
                       return (
