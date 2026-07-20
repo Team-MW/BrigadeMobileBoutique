@@ -17,7 +17,7 @@ const IPHONE_MODELS = [
 ];
 
 const REPAIRS = [
-  "Écran", "Batterie", "Caméra Arrière", "Caméra Avant",
+  "OLED", "LCD", "ORIGINAL", "Batterie", "Caméra Arrière", "Caméra Avant",
   "Connecteur Charge", "Vitre Arrière", "Micro/Haut-parleur"
 ];
 
@@ -39,7 +39,11 @@ export default function GrilleTarifaire() {
       if (data) {
         const loadedPrices = {};
         data.forEach(item => {
-          loadedPrices[`${item.model}-${item.repair}`] = item.price;
+          let repairName = item.repair;
+          if (repairName === 'Écran' || repairName === 'Ecran') {
+            repairName = 'ORIGINAL';
+          }
+          loadedPrices[`${item.model}-${repairName}`] = item.price;
         });
         setPrices(loadedPrices);
       }

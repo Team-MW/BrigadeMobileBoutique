@@ -281,7 +281,7 @@ export function ShopProvider({ children }) {
       const clientName = invoiceData.clientName || 'Client'
       
       // Attempt 1: Standard lowercase (clientname)
-      const { data: d1, error: e1 } = await supabase.from('invoices').insert([{
+      const payload1 = {
         clientname: clientName,
         clientphone: invoiceData.clientPhone || '',
         clientaddress: invoiceData.clientAddress || '',
@@ -289,21 +289,27 @@ export function ShopProvider({ children }) {
         total: total,
         items: invoiceData.items || [],
         notes: invoiceData.notes || ''
-      }]).select()
+      };
+      if (invoiceData.emissionDate) payload1.created_at = invoiceData.emissionDate;
+      const { data: d1, error: e1 } = await supabase.from('invoices').insert([payload1]).select()
       if (!e1) return d1?.[0] || true
 
       // Attempt 2: Minimal with 'client' (matches sales table)
-      const { data: d2, error: e2 } = await supabase.from('invoices').insert([{
+      const payload2 = {
         client: clientName,
         total: total
-      }]).select()
+      };
+      if (invoiceData.emissionDate) payload2.created_at = invoiceData.emissionDate;
+      const { data: d2, error: e2 } = await supabase.from('invoices').insert([payload2]).select()
       if (!e2) return d2?.[0] || true
 
       // Attempt 3: Underscores (client_name, total_amount)
-      const { data: d3, error: e3 } = await supabase.from('invoices').insert([{
+      const payload3 = {
         client_name: clientName,
         total_amount: total
-      }]).select()
+      };
+      if (invoiceData.emissionDate) payload3.created_at = invoiceData.emissionDate;
+      const { data: d3, error: e3 } = await supabase.from('invoices').insert([payload3]).select()
       if (!e3) return d3?.[0] || true
 
       // Final Attempt: Just total (most basic)

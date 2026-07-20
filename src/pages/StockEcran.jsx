@@ -33,7 +33,7 @@ const IPHONE_MODELS = [
   "IP8+", "IP8", "IP7+", "IP7", "IPSE"
 ];
 
-const SCREEN_QUALITIES = ["OLED", "SPARK", "Écran", "Batterie"];
+const SCREEN_QUALITIES = ["OLED", "LCD", "ORIGINAL", "Batterie"];
 
 const normalizeModelName = (name) => {
   if (!name) return "";
@@ -136,18 +136,21 @@ export default function StockEcran() {
       const loaded = {};
       data.forEach(item => {
         const normalizedModel = normalizeModelName(item.name);
-        let quality = item.category || 'Écran';
+        let quality = item.category || 'ORIGINAL';
         
         // Normalize quality typos or renames
-        if (quality.toUpperCase() === 'SOARK' || quality.toUpperCase() === 'SPARK') {
-          quality = 'SPARK';
+        if (quality.toUpperCase() === 'SOARK' || quality.toUpperCase() === 'SPARK' || quality.toUpperCase() === 'LCD') {
+          quality = 'LCD';
+        }
+        if (quality.toUpperCase() === 'ÉCRAN' || quality.toUpperCase() === 'ECRAN' || quality.toUpperCase() === 'ORIGINAL') {
+          quality = 'ORIGINAL';
         }
         if (quality.toUpperCase() === 'AQ7') {
           quality = 'Batterie';
         }
         
         if (!SCREEN_QUALITIES.includes(quality)) {
-          quality = 'Écran';
+          quality = 'ORIGINAL';
         }
 
         const key = `${normalizedModel}-${quality}`;

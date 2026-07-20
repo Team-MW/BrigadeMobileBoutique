@@ -30,6 +30,7 @@ export default function Factures() {
     clientName: '',
     clientAddress: '',
     clientPhone: '',
+    emissionDate: new Date().toISOString().split('T')[0],
     items: [{ description: '', quantity: 1, price: 0 }],
     notes: ''
   })
@@ -82,6 +83,7 @@ export default function Factures() {
         clientName: '',
         clientAddress: '',
         clientPhone: '',
+        emissionDate: new Date().toISOString().split('T')[0],
         items: [{ description: '', quantity: 1, price: 0 }],
         notes: ''
       })
@@ -217,13 +219,19 @@ export default function Factures() {
                 <Input required value={form.clientName} onChange={e => setForm({...form, clientName: e.target.value})} />
               </div>
               <div className="space-y-2">
+                <Label>Date d'émission</Label>
+                <Input type="date" required value={form.emissionDate} onChange={e => setForm({...form, emissionDate: e.target.value})} />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
                 <Label>Téléphone Client</Label>
                 <Input value={form.clientPhone} onChange={e => setForm({...form, clientPhone: e.target.value})} />
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Adresse/Détails Client</Label>
-              <Input value={form.clientAddress} onChange={e => setForm({...form, clientAddress: e.target.value})} />
+              <div className="space-y-2">
+                <Label>Adresse/Détails Client</Label>
+                <Input value={form.clientAddress} onChange={e => setForm({...form, clientAddress: e.target.value})} />
+              </div>
             </div>
 
             {invoiceType === 'standard' ? (
