@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Tableau de Bord', shortLabel: 'Accueil' },
   { to: '/ventes', icon: ShoppingCart, label: 'Suivi des Ventes', shortLabel: 'Ventes' },
+  { to: '/demandes-mobile', icon: Smartphone, label: 'Demande Mobile', shortLabel: 'Livraisons' },
   { to: '/factures', icon: FileText, label: 'Factures', shortLabel: 'Factures' },
   { to: '/tarifs', icon: Tags, label: 'Grille Tarifaire', shortLabel: 'Tarifs' },
   { to: '/organisation', icon: Kanban, label: 'Organisation', shortLabel: 'Tickets' },

@@ -12,6 +12,7 @@ import GrilleTarifaire from './pages/GrilleTarifaire'
 import Organisation from './pages/Organisation'
 import Stock from './pages/Stock'
 import StockEcran from './pages/StockEcran'
+import DemandesMobile from './pages/DemandesMobile'
 import './index.css'
 
 function Layout({ children }) {
@@ -60,6 +61,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/ventes" element={<Ventes />} />
+            <Route path="/demandes-mobile" element={<DemandesMobile />} />
             <Route path="/factures" element={<Factures />} />
             <Route path="/depot" element={<ClientForm />} />
             <Route path="/tarifs" element={<GrilleTarifaire />} />
