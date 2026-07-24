@@ -281,6 +281,12 @@ export function ShopProvider({ children }) {
       const clientName = invoiceData.clientName || 'Client'
       
       // Attempt 1: Standard lowercase (clientname)
+      let finalDate = invoiceData.emissionDate;
+      if (finalDate && finalDate.length === 10) {
+        const now = new Date().toISOString();
+        finalDate = `${finalDate}T${now.split('T')[1]}`;
+      }
+
       const payload1 = {
         clientname: clientName,
         clientphone: invoiceData.clientPhone || '',
@@ -290,16 +296,19 @@ export function ShopProvider({ children }) {
         items: invoiceData.items || [],
         notes: invoiceData.notes || ''
       };
-      if (invoiceData.emissionDate) payload1.created_at = invoiceData.emissionDate;
+      if (finalDate) payload1.createdat = finalDate;
       const { data: d1, error: e1 } = await supabase.from('invoices').insert([payload1]).select()
-      if (!e1) return d1?.[0] || true
+      if (!e1) {
+        fetchData();
+        return d1?.[0] || true;
+      }
 
       // Attempt 2: Minimal with 'client' (matches sales table)
       const payload2 = {
         client: clientName,
         total: total
       };
-      if (invoiceData.emissionDate) payload2.created_at = invoiceData.emissionDate;
+      if (finalDate) payload2.createdat = finalDate;
       const { data: d2, error: e2 } = await supabase.from('invoices').insert([payload2]).select()
       if (!e2) return d2?.[0] || true
 
@@ -308,7 +317,7 @@ export function ShopProvider({ children }) {
         client_name: clientName,
         total_amount: total
       };
-      if (invoiceData.emissionDate) payload3.created_at = invoiceData.emissionDate;
+      if (finalDate) payload3.createdat = finalDate;
       const { data: d3, error: e3 } = await supabase.from('invoices').insert([payload3]).select()
       if (!e3) return d3?.[0] || true
 
@@ -327,12 +336,18 @@ export function ShopProvider({ children }) {
   }
 
   const deleteInvoice = async (id) => {
+    // Mise à jour immédiate de l'interface
+    setInvoices(prev => prev.filter(inv => inv.id !== id))
+    
     const { error } = await supabase
       .from('invoices')
       .delete()
       .eq('id', id)
     
-    if (error) console.error('Error deleting invoice:', error.message)
+    if (error) {
+      console.error('Error deleting invoice:', error.message)
+      fetchData() // Recharge si erreur
+    }
   }
 
   // Stats calculation (similar to before, but using the state)

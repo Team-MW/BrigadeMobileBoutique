@@ -24,6 +24,7 @@ export default function Factures() {
     condition: 'Reconditionné (Grade A)',
     warranty: '6 mois',
     price: 0,
+    priceType: 'TTC',
   })
   
   const [form, setForm] = useState({
@@ -31,7 +32,7 @@ export default function Factures() {
     clientAddress: '',
     clientPhone: '',
     emissionDate: new Date().toISOString().split('T')[0],
-    items: [{ description: '', quantity: 1, price: 0 }],
+    items: [{ description: '', quantity: 1, price: 0, priceType: 'TTC' }],
     notes: ''
   })
 
@@ -45,7 +46,7 @@ export default function Factures() {
   const handleAddItem = () => {
     setForm(prev => ({
       ...prev,
-      items: [...prev.items, { description: '', quantity: 1, price: 0 }]
+      items: [...prev.items, { description: '', quantity: 1, price: 0, priceType: 'TTC' }]
     }))
   }
 
@@ -65,12 +66,20 @@ export default function Factures() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    let itemsToSubmit = form.items
+    let itemsToSubmit = form.items.map(item => {
+      const p = parseFloat(item.price || 0)
+      return {
+        ...item,
+        price: item.priceType === 'HT' ? p * 1.2 : p
+      }
+    })
+
     if (invoiceType === 'phone') {
+      const p = parseFloat(phoneDetails.price || 0)
       itemsToSubmit = [{
         description: `Téléphone: ${phoneDetails.brand} ${phoneDetails.model} | IMEI: ${phoneDetails.imei} | État: ${phoneDetails.condition} | Garantie: ${phoneDetails.warranty}`,
         quantity: 1,
-        price: phoneDetails.price
+        price: phoneDetails.priceType === 'HT' ? p * 1.2 : p
       }]
     }
 
@@ -84,7 +93,7 @@ export default function Factures() {
         clientAddress: '',
         clientPhone: '',
         emissionDate: new Date().toISOString().split('T')[0],
-        items: [{ description: '', quantity: 1, price: 0 }],
+        items: [{ description: '', quantity: 1, price: 0, priceType: 'TTC' }],
         notes: ''
       })
       setPhoneDetails({
@@ -94,6 +103,7 @@ export default function Factures() {
         condition: 'Reconditionné (Grade A)',
         warranty: '6 mois',
         price: 0,
+        priceType: 'TTC',
       })
     } else {
       alert("Erreur lors de la création de la facture.")
@@ -102,9 +112,14 @@ export default function Factures() {
 
   const calculateTotal = () => {
     if (invoiceType === 'phone') {
-      return parseFloat(phoneDetails.price || 0)
+      const p = parseFloat(phoneDetails.price || 0)
+      return phoneDetails.priceType === 'HT' ? p * 1.2 : p
     }
-    return form.items.reduce((sum, item) => sum + (item.quantity * parseFloat(item.price || 0)), 0)
+    return form.items.reduce((sum, item) => {
+      const p = parseFloat(item.price || 0)
+      const finalPrice = item.priceType === 'HT' ? p * 1.2 : p
+      return sum + (item.quantity * finalPrice)
+    }, 0)
   }
 
   const handlePrint = () => {
@@ -252,8 +267,16 @@ export default function Factures() {
                         <div className="w-20">
                           <Input type="number" placeholder="Qté" required min="1" value={item.quantity} onChange={e => handleItemChange(index, 'quantity', parseInt(e.target.value))} />
                         </div>
-                        <div className="flex-1 sm:w-32">
-                          <Input type="number" placeholder="Prix" required step="0.01" value={item.price} onChange={e => handleItemChange(index, 'price', parseFloat(e.target.value))} />
+                        <div className="flex-1 sm:w-40 flex">
+                          <Input type="number" placeholder="Prix" required step="0.01" value={item.price} onChange={e => handleItemChange(index, 'price', parseFloat(e.target.value))} className="rounded-r-none border-r-0" />
+                          <select 
+                            className="h-10 border border-input bg-background px-2 text-xs font-bold rounded-r-md text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-input z-10"
+                            value={item.priceType || 'TTC'}
+                            onChange={e => handleItemChange(index, 'priceType', e.target.value)}
+                          >
+                            <option value="TTC">TTC</option>
+                            <option value="HT">HT</option>
+                          </select>
                         </div>
                         <Button type="button" variant="ghost" size="icon" className="text-red-500 shrink-0" onClick={() => handleRemoveItem(index)} disabled={form.items.length === 1}>
                           <Trash2 className="w-4 h-4" />
@@ -322,8 +345,18 @@ export default function Factures() {
                   </div>
                 </div>
                 <div className="space-y-2 pt-2 border-t border-primary/10">
-                  <Label className="text-primary font-bold">Prix de Vente TTC (€)</Label>
-                  <Input required type="number" step="0.01" value={phoneDetails.price} onChange={e => setPhoneDetails({...phoneDetails, price: parseFloat(e.target.value) || 0})} placeholder="0.00" className="text-lg font-bold text-primary" />
+                  <Label className="text-primary font-bold">Prix de Vente</Label>
+                  <div className="flex">
+                    <Input required type="number" step="0.01" value={phoneDetails.price} onChange={e => setPhoneDetails({...phoneDetails, price: parseFloat(e.target.value) || 0})} placeholder="0.00" className="text-lg font-bold text-primary rounded-r-none border-r-0" />
+                    <select 
+                      className="h-10 border border-input bg-background px-3 font-bold rounded-r-md text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-input z-10"
+                      value={phoneDetails.priceType || 'TTC'}
+                      onChange={e => setPhoneDetails({...phoneDetails, priceType: e.target.value})}
+                    >
+                      <option value="TTC">TTC</option>
+                      <option value="HT">HT</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             )}
