@@ -169,7 +169,7 @@ export function ShopProvider({ children }) {
       
       if (error) throw error
 
-      // Automatically create a ticket in the Organisation Kanban board
+      // Automatically cdfsvreate a ticket in the Organisation Kanban board
       if (data && data.length > 0) {
         const newSale = data[0]
         let ticketStatus = 'A FAIRE'
