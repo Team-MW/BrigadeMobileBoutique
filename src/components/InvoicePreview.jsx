@@ -505,7 +505,7 @@ export default function InvoicePreview({ invoice, isOpen, onClose }) {
             className="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20 gap-1.5 px-4 sm:px-8 w-full sm:w-auto font-bold order-1 sm:order-4 col-span-2 sm:col-span-1 text-xs sm:text-sm"
           >
              <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-             PDF Premium
+             PDF
           </Button>
         </div>
         
