@@ -335,6 +335,56 @@ export function ShopProvider({ children }) {
     }
   }
 
+  const updateInvoice = async (id, invoiceData) => {
+    setIsWorking(true)
+    try {
+      const total = parseFloat(invoiceData.total) || 0
+      const clientName = invoiceData.clientName || 'Client'
+      
+      let finalDate = invoiceData.emissionDate;
+      if (finalDate && finalDate.length === 10) {
+        const now = new Date().toISOString();
+        finalDate = `${finalDate}T${now.split('T')[1]}`;
+      }
+
+      const updates = {
+        clientname: clientName,
+        clientphone: invoiceData.clientPhone || '',
+        clientaddress: invoiceData.clientAddress || '',
+        imei: invoiceData.imei || '',
+        total: total,
+        items: invoiceData.items || [],
+        notes: invoiceData.notes || ''
+      };
+      if (finalDate) updates.createdat = finalDate;
+
+      const { error } = await supabase
+        .from('invoices')
+        .update(updates)
+        .eq('id', id)
+      
+      if (error) {
+        console.error('Update failed with main schema, trying fallback', error)
+        // Fallback if schema is different
+        const fallbackUpdates = {
+          client_name: clientName,
+          total_amount: total
+        };
+        if (finalDate) fallbackUpdates.createdat = finalDate;
+        const { error: e2 } = await supabase.from('invoices').update(fallbackUpdates).eq('id', id)
+        if (e2) throw e2;
+      }
+      
+      fetchData()
+      return true
+    } catch (error) {
+      console.error('Erreur détaillée dans updateInvoice:', error)
+      return null
+    } finally {
+      setIsWorking(false)
+    }
+  }
+
   const deleteInvoice = async (id) => {
     // Mise à jour immédiate de l'interface
     setInvoices(prev => prev.filter(inv => inv.id !== id))
@@ -431,6 +481,7 @@ export function ShopProvider({ children }) {
       updateSale, 
       deleteSale, 
       addInvoice, 
+      updateInvoice,
       deleteInvoice,
       getStats
     }}>

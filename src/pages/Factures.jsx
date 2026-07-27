@@ -8,13 +8,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Plus, Search, FileText, Trash2, Printer, X, Download, Eye } from 'lucide-react'
+import { Plus, Search, FileText, Trash2, Printer, X, Download, Eye, Edit } from 'lucide-react'
 
 export default function Factures() {
-  const { invoices, addInvoice, deleteInvoice, isWorking } = useShop()
+  const { invoices, addInvoice, updateInvoice, deleteInvoice, isWorking } = useShop()
   const [search, setSearch] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [previewInvoice, setPreviewInvoice] = useState(null)
+  const [editingInvoiceId, setEditingInvoiceId] = useState(null)
   
   const [invoiceType, setInvoiceType] = useState('standard') // 'standard' or 'phone'
   const [phoneDetails, setPhoneDetails] = useState({
@@ -42,6 +43,20 @@ export default function Factures() {
     return name.toLowerCase().includes(search.toLowerCase()) ||
            id.toString().toLowerCase().includes(search.toLowerCase())
   })
+
+  const handleEdit = (inv) => {
+    setEditingInvoiceId(inv.id)
+    setForm({
+      clientName: inv.clientName || '',
+      clientAddress: inv.clientAddress || '',
+      clientPhone: inv.clientPhone || '',
+      emissionDate: inv.createdAt ? inv.createdAt.split('T')[0] : new Date().toISOString().split('T')[0],
+      items: inv.items && inv.items.length > 0 ? inv.items : [{ description: '', quantity: 1, price: 0, priceType: 'TTC' }],
+      notes: inv.notes || ''
+    })
+    setInvoiceType('standard')
+    setDialogOpen(true)
+  }
 
   const handleAddItem = () => {
     setForm(prev => ({
@@ -84,10 +99,13 @@ export default function Factures() {
     }
 
     const total = itemsToSubmit.reduce((sum, item) => sum + (item.quantity * parseFloat(item.price || 0)), 0)
-    const result = await addInvoice({ ...form, items: itemsToSubmit, total })
+    const result = editingInvoiceId 
+      ? await updateInvoice(editingInvoiceId, { ...form, items: itemsToSubmit, total })
+      : await addInvoice({ ...form, items: itemsToSubmit, total })
     
     if (result) {
       setDialogOpen(false)
+      setEditingInvoiceId(null)
       setForm({
         clientName: '',
         clientAddress: '',
@@ -152,7 +170,19 @@ export default function Factures() {
               className="pl-9"
             />
           </div>
-          <Button onClick={() => setDialogOpen(true)} className="gap-2">
+          <Button onClick={() => {
+            setEditingInvoiceId(null)
+            setForm({
+              clientName: '',
+              clientAddress: '',
+              clientPhone: '',
+              emissionDate: new Date().toISOString().split('T')[0],
+              items: [{ description: '', quantity: 1, price: 0, priceType: 'TTC' }],
+              notes: ''
+            })
+            setInvoiceType('standard')
+            setDialogOpen(true)
+          }} className="gap-2">
             <Plus className="w-4 h-4" />
             Créer une facture
           </Button>
@@ -189,6 +219,9 @@ export default function Factures() {
                           <Button variant="ghost" size="icon" onClick={() => setPreviewInvoice(inv)}>
                             <Eye className="w-4 h-4" />
                           </Button>
+                          <Button variant="ghost" size="icon" className="text-blue-400 hover:text-blue-500" onClick={() => handleEdit(inv)}>
+                            <Edit className="w-4 h-4" />
+                          </Button>
                           <Button variant="ghost" size="icon" className="text-red-400 hover:text-red-500" onClick={() => deleteInvoice(inv.id)}>
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -207,7 +240,7 @@ export default function Factures() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Créer une Facture</DialogTitle>
+            <DialogTitle>{editingInvoiceId ? "Modifier la Facture" : "Créer une Facture"}</DialogTitle>
           </DialogHeader>
 
           <div className="flex gap-2 p-1 bg-secondary/50 rounded-lg mb-2">
@@ -365,7 +398,7 @@ export default function Factures() {
               <p className="text-lg font-bold">Total: {calculateTotal().toFixed(2)} €</p>
               <DialogFooter className="w-full sm:w-auto flex-col sm:flex-row gap-2">
                 <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setDialogOpen(false)}>Annuler</Button>
-                <Button type="submit" className="w-full sm:w-auto">Générer la Facture</Button>
+                <Button type="submit" className="w-full sm:w-auto">{editingInvoiceId ? "Enregistrer les modifications" : "Générer la Facture"}</Button>
               </DialogFooter>
             </div>
           </form>
