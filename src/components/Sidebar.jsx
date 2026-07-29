@@ -21,6 +21,7 @@ export default function Sidebar() {
   const mobileVisibleItems = [
     { to: '/', icon: LayoutDashboard, shortLabel: 'Accueil' },
     { to: '/ventes', icon: ShoppingCart, shortLabel: 'Ventes' },
+    { to: '/tarifs', icon: Tags, shortLabel: 'Tarifs' },
     { to: '/organisation', icon: Kanban, shortLabel: 'Tickets' },
     { to: '/stock-ecran', icon: Smartphone, shortLabel: 'Pièces' },
   ]
