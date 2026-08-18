@@ -17,8 +17,8 @@ const IPHONE_MODELS = [
 ];
 
 const REPAIRS = [
-  "OLED", "LCD", "ORIGINAL", "Batterie", "Batterie +", "Caméra Arrière", "Caméra Avant",
-  "Connecteur Charge", "Vitre Arrière", "Châssis", "Micro/Haut-parleur"
+  "OLED", "OLED +", "LCD", "ORIGINAL", "Batt", "Batt +", "Cam Arr", "Cam Av",
+  "Conn Charge", "Vitre Arr", "Châssis", "Micro/HP"
 ];
 
 export default function GrilleTarifaire() {
@@ -47,9 +47,14 @@ export default function GrilleTarifaire() {
         const loadedPrices = {};
         data.forEach(item => {
           let repairName = item.repair;
-          if (repairName === 'Écran' || repairName === 'Ecran') {
-            repairName = 'ORIGINAL';
-          }
+          if (repairName === 'Écran' || repairName === 'Ecran') repairName = 'ORIGINAL';
+          if (repairName === 'Batterie') repairName = 'Batt';
+          if (repairName === 'Batterie +') repairName = 'Batt +';
+          if (repairName === 'Caméra Arrière') repairName = 'Cam Arr';
+          if (repairName === 'Caméra Avant') repairName = 'Cam Av';
+          if (repairName === 'Connecteur Charge') repairName = 'Conn Charge';
+          if (repairName === 'Vitre Arrière') repairName = 'Vitre Arr';
+          if (repairName === 'Micro/Haut-parleur') repairName = 'Micro/HP';
           loadedPrices[`${item.model}-${repairName}`] = item.price;
         });
         setPrices(loadedPrices);
@@ -113,6 +118,13 @@ export default function GrilleTarifaire() {
                 data.forEach(item => {
                   let repairName = item.repair;
                   if (repairName === 'Écran' || repairName === 'Ecran') repairName = 'ORIGINAL';
+                  if (repairName === 'Batterie') repairName = 'Batt';
+                  if (repairName === 'Batterie +') repairName = 'Batt +';
+                  if (repairName === 'Caméra Arrière') repairName = 'Cam Arr';
+                  if (repairName === 'Caméra Avant') repairName = 'Cam Av';
+                  if (repairName === 'Connecteur Charge') repairName = 'Conn Charge';
+                  if (repairName === 'Vitre Arrière') repairName = 'Vitre Arr';
+                  if (repairName === 'Micro/Haut-parleur') repairName = 'Micro/HP';
                   loadedPrices[`${item.model}-${repairName}`] = item.price;
                 });
                 setPrices(loadedPrices);

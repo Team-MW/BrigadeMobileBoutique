@@ -33,10 +33,10 @@ const IPHONE_MODELS = [
   "IP8+", "IP8", "IP7+", "IP7", "IPSE"
 ];
 
-const SCREEN_QUALITIES = ["OLED", "LCD", "ORIGINAL", "Batterie", "Batterie +"];
+const SCREEN_QUALITIES = ["OLED", "OLED +", "LCD", "ORIGINAL", "Batt", "Batt +", "Conn Charge"];
 
 const getSharedModelKey = (model, quality) => {
-  if ((model === 'IP12' || model === 'IP12P') && !quality.includes('Batterie')) return 'IP12/12P';
+  if ((model === 'IP12' || model === 'IP12P') && !quality.includes('Batt')) return 'IP12/12P';
   return model;
 };
 
@@ -150,8 +150,14 @@ export default function StockEcran() {
         if (quality.toUpperCase() === 'ÉCRAN' || quality.toUpperCase() === 'ECRAN' || quality.toUpperCase() === 'ORIGINAL') {
           quality = 'ORIGINAL';
         }
-        if (quality.toUpperCase() === 'AQ7') {
-          quality = 'Batterie';
+        if (quality.toUpperCase() === 'AQ7' || quality.toUpperCase() === 'BATTERIE') {
+          quality = 'Batt';
+        }
+        if (quality.toUpperCase() === 'BATTERIE +') {
+          quality = 'Batt +';
+        }
+        if (quality.toUpperCase() === 'CONNECTEUR CHARGE' || quality.toUpperCase() === 'CONNECTEUR DE CHARGE') {
+          quality = 'Conn Charge';
         }
         
         if (!SCREEN_QUALITIES.includes(quality)) {
