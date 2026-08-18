@@ -17,7 +17,7 @@ const IPHONE_MODELS = [
 ];
 
 const REPAIRS = [
-  "OLED", "LCD", "ORIGINAL", "Batterie", "Caméra Arrière", "Caméra Avant",
+  "OLED", "LCD", "ORIGINAL", "Batterie", "Batterie +", "Caméra Arrière", "Caméra Avant",
   "Connecteur Charge", "Vitre Arrière", "Châssis", "Micro/Haut-parleur"
 ];
 

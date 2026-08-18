@@ -33,10 +33,10 @@ const IPHONE_MODELS = [
   "IP8+", "IP8", "IP7+", "IP7", "IPSE"
 ];
 
-const SCREEN_QUALITIES = ["OLED", "LCD", "ORIGINAL", "Batterie"];
+const SCREEN_QUALITIES = ["OLED", "LCD", "ORIGINAL", "Batterie", "Batterie +"];
 
 const getSharedModelKey = (model, quality) => {
-  if ((model === 'IP12' || model === 'IP12P') && quality !== 'Batterie') return 'IP12/12P';
+  if ((model === 'IP12' || model === 'IP12P') && !quality.includes('Batterie')) return 'IP12/12P';
   return model;
 };
 
