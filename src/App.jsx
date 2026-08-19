@@ -13,6 +13,7 @@ import Organisation from './pages/Organisation'
 import Stock from './pages/Stock'
 import StockEcran from './pages/StockEcran'
 import DemandesMobile from './pages/DemandesMobile'
+import Stagiaires from './pages/Stagiaires'
 import './index.css'
 
 function Layout({ children }) {
@@ -68,6 +69,7 @@ function App() {
             <Route path="/organisation" element={<Organisation />} />
             <Route path="/stock" element={<Stock />} />
             <Route path="/stock-ecran" element={<StockEcran />} />
+            <Route path="/stagiaires" element={<Stagiaires />} />
             <Route path="/debug" element={<Debug />} />
           </Routes>
         </Layout>

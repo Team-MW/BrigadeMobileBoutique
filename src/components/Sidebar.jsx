@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, ShoppingCart, Smartphone, TrendingUp, Settings, Menu, X, FileText, Tags, Kanban, Package, MoreHorizontal } from 'lucide-react'
+import { LayoutDashboard, ShoppingCart, Smartphone, TrendingUp, Settings, Menu, X, FileText, Tags, Kanban, Package, MoreHorizontal, Users } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -12,6 +12,7 @@ const navItems = [
   { to: '/organisation', icon: Kanban, label: 'Organisation', shortLabel: 'Tickets' },
   { to: '/stock', icon: Package, label: 'Stock', shortLabel: 'Stock' },
   { to: '/stock-ecran', icon: Smartphone, label: 'Stock Réparation', shortLabel: 'Pièces' },
+  { to: '/stagiaires', icon: Users, label: 'Stagiaires', shortLabel: 'Stagiaires' },
 ]
 
 export default function Sidebar() {
