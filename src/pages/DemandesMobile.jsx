@@ -282,10 +282,17 @@ export default function DemandesMobile() {
     .sort((a, b) => {
       let aVal = a[sortField]
       let bVal = b[sortField]
-      if (typeof aVal === 'string') {
-        return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal)
+      
+      if (sortField === 'date') {
+        const dA = new Date(aVal || 0).getTime() || 0
+        const dB = new Date(bVal || 0).getTime() || 0
+        return sortDir === 'asc' ? dA - dB : dB - dA
       }
-      return sortDir === 'asc' ? aVal - bVal : bVal - aVal
+
+      if (typeof aVal === 'string') {
+        return sortDir === 'asc' ? (aVal || '').localeCompare(bVal || '') : (bVal || '').localeCompare(aVal || '')
+      }
+      return sortDir === 'asc' ? (aVal || 0) - (bVal || 0) : (bVal || 0) - (aVal || 0)
     })
 
   const totalFiltered = filtered.reduce((sum, s) => sum + (parseFloat(s.price) || 0), 0)
