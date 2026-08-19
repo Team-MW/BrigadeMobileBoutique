@@ -469,8 +469,8 @@ export default function Organisation() {
       <div className="flex flex-col gap-4 mb-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-indigo-600 text-white rounded-xl shadow-md shadow-indigo-200">
-              <FolderKanban className="w-6 h-6" />
+            <div className="p-1 bg-white border border-slate-200 rounded-xl shadow-sm flex items-center justify-center">
+              <img src="/logo.png" alt="Brigade Mobile" className="w-10 h-10 object-contain rounded-lg" />
             </div>
             <div>
               <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">

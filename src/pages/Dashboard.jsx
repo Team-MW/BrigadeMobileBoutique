@@ -71,6 +71,52 @@ export default function Dashboard() {
 
   const recentSales = sales.slice(0, 5)
 
+  const now = new Date()
+  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+  const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+
+  let currentMonthRevenue = 0
+  let lastMonthRevenue = 0
+
+  sales.forEach(sale => {
+    if (!sale.date) return
+    const d = new Date(sale.date)
+    const price = parseFloat(sale.price) || 0
+
+    if (d >= currentMonthStart && d < nextMonthStart) {
+      currentMonthRevenue += price
+    } else if (d >= lastMonthStart && d < currentMonthStart) {
+      lastMonthRevenue += price
+    }
+  })
+
+  // Compute monthly revenue and profit for the chart
+  const monthlyDataMap = new Map()
+  sales.forEach(sale => {
+    if (!sale.date) return
+    const d = new Date(sale.date)
+    const yearMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    
+    if (!monthlyDataMap.has(yearMonth)) {
+      const monthName = d.toLocaleDateString('fr-FR', { month: 'short' })
+      monthlyDataMap.set(yearMonth, { 
+        date: `${monthName.charAt(0).toUpperCase() + monthName.slice(1)} ${d.getFullYear()}`, 
+        sortKey: yearMonth,
+        revenue: 0, 
+        profit: 0 
+      })
+    }
+    
+    const entry = monthlyDataMap.get(yearMonth)
+    entry.revenue += parseFloat(sale.price) || 0
+    entry.profit += parseFloat(sale.profit) || 0
+  })
+
+  const monthlyRevenueData = Array.from(monthlyDataMap.values())
+    .sort((a, b) => a.sortKey.localeCompare(b.sortKey))
+    .slice(-12) // Keep only the last 12 months
+
   return (
     <div className="flex-1 flex flex-col min-h-screen overflow-y-auto">
       <Header title="Tableau de Bord" subtitle="Vue d'ensemble de votre boutique" />
@@ -132,18 +178,18 @@ export default function Dashboard() {
             color="bg-emerald-600"
           />
           <StatCard
-            title="Réparations"
-            value={stats.repairCount}
-            icon={Wrench}
+            title="CA Mois en Cours"
+            value={`${currentMonthRevenue.toFixed(2)} €`}
+            icon={Euro}
             color="bg-violet-600"
-            subtitle={`${stats.completedSales} terminées`}
+            subtitle="Chiffre d'affaires du mois"
           />
           <StatCard
-            title="Ventes Accessoires"
-            value={stats.saleCount}
-            icon={ShoppingBag}
+            title="CA Mois Dernier"
+            value={`${lastMonthRevenue.toFixed(2)} €`}
+            icon={Euro}
             color="bg-amber-600"
-            subtitle={`${stats.pendingSales} en attente`}
+            subtitle="Chiffre d'affaires précédent"
           />
         </div>
 
@@ -157,15 +203,15 @@ export default function Dashboard() {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Activity className="w-4 h-4 text-primary" />
-                    Revenus & Bénéfices (7 derniers jours)
+                    Revenus & Bénéfices (Mois par mois)
                   </CardTitle>
-                  <CardDescription>Évolution quotidienne</CardDescription>
+                  <CardDescription>Évolution mensuelle</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={240}>
-                <AreaChart data={stats.dailyRevenue}>
+                <AreaChart data={monthlyRevenueData}>
                   <defs>
                     <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />

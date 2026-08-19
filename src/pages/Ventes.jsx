@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useShop } from '@/context/ShopContext'
 import Header from '@/components/Header'
 import InvoicePreview from '@/components/InvoicePreview'
@@ -15,7 +15,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   Plus, Search, Filter, Edit, Trash2, Wrench, ShoppingBag,
   CheckCircle, Clock, AlertCircle, Download, ChevronUp, ChevronDown,
-  X, Euro, TrendingUp, FileText, RefreshCw, Smartphone, Printer
+  X, Euro, TrendingUp, FileText, RefreshCw, Smartphone, Printer, Upload
 } from 'lucide-react'
 import PatternLock from '@/components/PatternLock'
 import { cn } from '@/lib/utils'
@@ -92,6 +92,29 @@ export default function Ventes() {
   }, []);
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterType, setFilterType] = useState('all')
+  const [filterMonth, setFilterMonth] = useState('all')
+
+  const availableMonths = useMemo(() => {
+    const months = new Set()
+    sales.forEach(s => {
+      if (s.date) {
+        months.add(s.date.substring(0, 7))
+      }
+    })
+    return Array.from(months).sort().reverse()
+  }, [sales])
+
+  const formatMonth = (yyyy_mm) => {
+    if (!yyyy_mm) return ''
+    try {
+      const [y, m] = yyyy_mm.split('-')
+      const date = new Date(y, m - 1, 1)
+      const formatted = date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+      return formatted.charAt(0).toUpperCase() + formatted.slice(1)
+    } catch (e) {
+      return yyyy_mm
+    }
+  }
   const [sortField, setSortField] = useState('date')
   const [sortDir, setSortDir] = useState('desc')
   const [selectedSale, setSelectedSale] = useState(null)
@@ -104,6 +127,7 @@ export default function Ventes() {
   const [customService, setCustomService] = useState('')
   const [unlockType, setUnlockType] = useState('code') // 'code' | 'schema'
   const [viewPattern, setViewPattern] = useState(null)
+  const fileInputRef = useRef(null)
 
   const generateReceiptPDF = async (sale) => {
     const container = document.createElement('div')
@@ -252,7 +276,8 @@ export default function Ventes() {
       ].some(v => v.toLowerCase().includes(q))
       const matchStatus = filterStatus === 'all' || s.status === filterStatus
       const matchType = filterType === 'all' || s.type === filterType
-      return matchSearch && matchStatus && matchType
+      const matchMonth = filterMonth === 'all' || (s.date && s.date.startsWith(filterMonth))
+      return matchSearch && matchStatus && matchType && matchMonth
     })
     .sort((a, b) => {
       let aVal = a[sortField]
@@ -373,9 +398,102 @@ export default function Ventes() {
     })
   }
 
-  // ─── Export CSV ───────────────────────────────────────────────────
-  const exportExcel = () => {
-    const headers = ['ID', 'Date', 'Client', 'Contact (Tel)', 'IMEI', 'Appareil', 'Type', 'Service', 'Total (€)', 'Acompte (€)', 'Coût (€)', 'Bénéfice (€)', 'Paiement', 'Statut']
+  // ─── Import Excel ──────────────────────────────────────────────────
+  const handleImportExcel = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    try {
+      const XLSX = await import('xlsx')
+      const reader = new FileReader()
+      reader.onload = async (evt) => {
+        try {
+          const dataBuffer = new Uint8Array(evt.target.result)
+          const wb = XLSX.read(dataBuffer, { type: 'array' })
+          const wsname = wb.SheetNames[0]
+          const ws = wb.Sheets[wsname]
+        
+        // Find the actual header row (sometimes row 1 is TOTAL)
+        const rowsArrays = XLSX.utils.sheet_to_json(ws, { header: 1 })
+        let headerRowIndex = 0
+        for (let i = 0; i < Math.min(10, rowsArrays.length); i++) {
+          const rowText = rowsArrays[i].join(' ')
+          if (rowText.includes('Date') || rowText.includes('Type de vente') || rowText.includes('Client')) {
+            headerRowIndex = i
+            break
+          }
+        }
+        
+        const data = XLSX.utils.sheet_to_json(ws, { range: headerRowIndex, defval: "" })
+        
+        let importedCount = 0
+        for (const row of data) {
+          // Skip total rows or empty rows
+          if (row['__EMPTY'] === 'TOTAL' || row['TOTAL']) continue
+          
+          const rawDate = row['Date'] || ''
+          const client = row['Nom client'] || row['Client'] || ''
+          const phone = row['Produit / Service'] || row['Modèle du téléphone'] || row['Appareil'] || ''
+          const service = row['Descriptif'] || row['Service'] || ''
+          const type = row['Type de vente'] || row['Type'] || 'Réparation'
+
+          if (!phone && !service && !client) continue // Skip invalid rows
+          
+          let parsedDate = new Date()
+          if (rawDate) {
+            const parts = String(rawDate).split('/')
+            if (parts.length === 3) {
+              parsedDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`)
+            }
+          }
+
+          const parsePrice = (val) => {
+            if (!val) return 0
+            if (typeof val === 'number') return val
+            return parseFloat(String(val).replace(',', '.')) || 0
+          }
+
+          let status = row['Statut'] || 'En attente'
+          if (status === 'Payé') status = 'Terminé'
+
+          const saleData = {
+            date: parsedDate.toISOString().split('T')[0],
+            client: client || 'Client Anonyme',
+            clientPhone: row['Téléphone client'] || row['Contact (Tel)'] || '',
+            imei: row['IMEI'] || '',
+            phone: phone || 'Inconnu',
+            type: type,
+            service: service || phone || 'Non spécifié',
+            price: parsePrice(row['Prix unitaire (TTC)'] || row['Total (€)']),
+            acompte: parsePrice(row['Acompte (€)']),
+            cost: parsePrice(row['Prix d’achat / coût pièce'] || row['Coût (€)']),
+            paymentMethod: row['Mode de paiement'] || row['Paiement'] || 'Espèces',
+            status: status,
+            notes: 'Importé depuis Excel'
+          }
+          await addSale(saleData)
+          importedCount++
+        }
+        alert(`${importedCount} ventes/réparations importées avec succès !`)
+        fetchData()
+      } catch (error) {
+        console.error("Erreur lors de l'import :", error)
+        alert("Erreur lors de l'import du fichier Excel.")
+      }
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+    reader.readAsArrayBuffer(file)
+    } catch (err) {
+      console.error("Erreur lors du chargement de la librairie excel :", err)
+      alert("Erreur lors du chargement du module d'import.")
+    }
+  }
+
+  // ─── Export Excel ───────────────────────────────────────────────────
+  const exportExcel = async () => {
+    try {
+      const XLSX = await import('xlsx')
+      const headers = ['ID', 'Date', 'Client', 'Contact (Tel)', 'IMEI', 'Appareil', 'Type', 'Service', 'Total (€)', 'Acompte (€)', 'Coût (€)', 'Bénéfice (€)', 'Paiement', 'Statut']
     const rows = filtered.map(s => [
       s.id,
       new Date(s.date).toLocaleDateString('fr-FR'),
@@ -393,18 +511,15 @@ export default function Ventes() {
       s.status
     ])
 
-    // Excel friendly CSV: UTF-8 BOM + semicolon separator + sep=; marker
-    const csvContent = "sep=;\n" + [headers, ...rows]
-      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';'))
-      .join('\n')
-
-    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `suivi_ventes_brigade_${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}.csv`
-    link.click()
-    URL.revokeObjectURL(url)
+    const wsData = [headers, ...rows]
+    const ws = XLSX.utils.aoa_to_sheet(wsData)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, "Suivi")
+    XLSX.writeFile(wb, `suivi_ventes_brigade_${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}.xlsx`)
+    } catch (err) {
+      console.error("Erreur lors de l'export excel :", err)
+      alert("Erreur lors de l'export.")
+    }
   }
 
   return (
@@ -469,6 +584,18 @@ export default function Ventes() {
             )}
           </div>
 
+          {/* Month Filter */}
+          <select 
+            className="h-10 px-3 rounded-lg border border-border bg-background text-sm min-w-[150px]"
+            value={filterMonth}
+            onChange={(e) => setFilterMonth(e.target.value)}
+          >
+            <option value="all">Tous les mois</option>
+            {availableMonths.map(m => (
+              <option key={m} value={m}>{formatMonth(m)}</option>
+            ))}
+          </select>
+
           {/* Refresh Button instead of filters */}
           <Button 
             variant="outline" 
@@ -482,6 +609,17 @@ export default function Ventes() {
 
           {/* Actions */}
           <div className="flex gap-2">
+            <input 
+              type="file" 
+              accept=".xlsx, .xls, .csv" 
+              className="hidden" 
+              ref={fileInputRef} 
+              onChange={handleImportExcel} 
+            />
+            <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="h-10">
+              <Upload className="w-4 h-4" />
+              <span className="hidden sm:inline">Import Excel</span>
+            </Button>
             <Button variant="outline" size="sm" onClick={exportExcel} className="h-10">
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">Export Excel</span>
@@ -494,7 +632,7 @@ export default function Ventes() {
         </div>
 
         {/* Results Info */}
-        {(search || filterStatus !== 'all' || filterType !== 'all') && (
+        {(search || filterStatus !== 'all' || filterType !== 'all' || filterMonth !== 'all') && (
           <div className="flex items-center justify-between text-sm text-muted-foreground bg-card border border-border rounded-lg px-4 py-2">
             <span>{filtered.length} résultat(s)</span>
             <div className="flex items-center gap-4">
