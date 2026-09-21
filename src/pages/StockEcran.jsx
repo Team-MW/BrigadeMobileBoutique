@@ -306,7 +306,7 @@ export default function StockEcran() {
         <div>
           <h1 className="text-2xl sm:text-4xl font-extrabold text-foreground tracking-tight flex items-center gap-3">
             <Smartphone className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
-            Stock Réparation
+            Pièces
           </h1>
           <p className="text-muted-foreground mt-2 text-sm sm:text-lg">Gérez les quantités en stock pour chaque pièce de réparation d'iPhone</p>
         </div>

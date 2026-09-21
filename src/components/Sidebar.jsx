@@ -12,7 +12,7 @@ const navItems = [
   { to: '/tarifs', icon: Tags, label: 'Grille Tarifaire', shortLabel: 'Tarifs' },
   { to: '/organisation', icon: Kanban, label: 'Organisation', shortLabel: 'Tickets' },
   { to: '/stock', icon: Package, label: 'Stock', shortLabel: 'Stock' },
-  { to: '/stock-ecran', icon: Smartphone, label: 'Stock Réparation', shortLabel: 'Pièces' },
+  { to: '/stock-ecran', icon: Smartphone, label: 'Pièces', shortLabel: 'Pièces' },
   { to: '/stagiaires', icon: Users, label: 'Stagiaires', shortLabel: 'Stagiaires' },
 ]
 
