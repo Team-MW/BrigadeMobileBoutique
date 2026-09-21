@@ -13,6 +13,7 @@ import Organisation from './pages/Organisation'
 import Stock from './pages/Stock'
 import StockEcran from './pages/StockEcran'
 import DemandesMobile from './pages/DemandesMobile'
+import DemandesFormulaire from './pages/DemandesFormulaire'
 import Stagiaires from './pages/Stagiaires'
 import './index.css'
 
@@ -63,6 +64,7 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/ventes" element={<Ventes />} />
             <Route path="/demandes-mobile" element={<DemandesMobile />} />
+            <Route path="/demandes-formulaire" element={<DemandesFormulaire />} />
             <Route path="/factures" element={<Factures />} />
             <Route path="/depot" element={<ClientForm />} />
             <Route path="/tarifs" element={<GrilleTarifaire />} />

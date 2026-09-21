@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, ShoppingCart, Smartphone, TrendingUp, Settings, Menu, X, FileText, Tags, Kanban, Package, MoreHorizontal, Users } from 'lucide-react'
+import { LayoutDashboard, ShoppingCart, Smartphone, TrendingUp, Settings, Menu, X, FileText, Tags, Kanban, Package, MoreHorizontal, Users, ClipboardList } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -7,6 +7,7 @@ const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Tableau de Bord', shortLabel: 'Accueil' },
   { to: '/ventes', icon: ShoppingCart, label: 'Suivi des Ventes', shortLabel: 'Ventes' },
   { to: '/demandes-mobile', icon: Smartphone, label: 'Demande Mobile', shortLabel: 'Livraisons' },
+  { to: '/demandes-formulaire', icon: ClipboardList, label: 'Demandes formulaire', shortLabel: 'Formulaires' },
   { to: '/factures', icon: FileText, label: 'Factures', shortLabel: 'Factures' },
   { to: '/tarifs', icon: Tags, label: 'Grille Tarifaire', shortLabel: 'Tarifs' },
   { to: '/organisation', icon: Kanban, label: 'Organisation', shortLabel: 'Tickets' },
