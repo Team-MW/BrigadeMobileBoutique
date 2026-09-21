@@ -208,7 +208,11 @@ export default function DemandesFormulaire() {
                     </TableRow>
                   ) : (
                     filtered.map((d) => (
-                      <TableRow key={`${d.formId}-${d.id}`} className="group">
+                      <TableRow
+                        key={`${d.formId}-${d.id}`}
+                        className="group cursor-pointer hover:bg-muted/40"
+                        onClick={() => setSelected(d)}
+                      >
                         <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                           <div className="flex items-center gap-2">
                             {formatDate(d.createdAt)}
@@ -233,7 +237,11 @@ export default function DemandesFormulaire() {
                         </TableCell>
                         <TableCell className="text-sm font-medium text-blue-400">
                           {d.fields.telephone ? (
-                            <a href={`tel:${d.fields.telephone}`} className="hover:underline flex items-center gap-1">
+                            <a
+                              href={`tel:${d.fields.telephone}`}
+                              className="hover:underline flex items-center gap-1"
+                              onClick={(e) => e.stopPropagation()}
+                            >
                               <Phone className="w-3.5 h-3.5" />
                               {d.fields.telephone}
                             </a>
@@ -260,7 +268,10 @@ export default function DemandesFormulaire() {
                         </TableCell>
                         <TableCell>
                           <button
-                            onClick={() => setSelected(d)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setSelected(d)
+                            }}
                             className="p-2 rounded-lg bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground transition-all duration-200 border border-primary/20 shadow-sm"
                             title="Voir le détail"
                           >
